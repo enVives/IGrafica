@@ -24,7 +24,11 @@ float angle2 = 35*M_PI/180;
 float angle2dot =0;
 float t = 0;
 float dt = 0.01;
+float xx1 = 0.0f;
+float yy1 = -R1;
 
+float xx2 = 0.0f;
+float yy2 = -R2;
 
 void drawCircle(float cx, float cy, float r, int num_segments)
 {
@@ -33,31 +37,31 @@ void drawCircle(float cx, float cy, float r, int num_segments)
 
     float radial_factor = cosf(theta);//calculate the radial factor 
 
-    float x = r;//we start at angle = 0 
+    float xx = r;//we start at angle = 0 
 
-    float y = 0;
+    float yy = 0;
     glLineWidth(2);
     glBegin(GL_POLYGON);
     for (int ii = 0; ii < num_segments; ii++)
     {
-        glVertex2f(x + cx, y + cy);//output vertex 
+        glVertex2f(xx + cx, yy + cy);//output vertex 
 
         //calculate the tangential vector 
         //remember, the radial vector is (x, y) 
         //to get the tangential vector we flip those coordinates and negate one of them 
 
-        float tx = -y;
-        float ty = x;
+        float tx = -yy;
+        float ty = xx;
 
         //add the tangential vector 
 
-        x += tx * tangetial_factor;
-        y += ty * tangetial_factor;
+        xx += tx * tangetial_factor;
+        yy += ty * tangetial_factor;
 
         //correct using the radial factor 
 
-        x *= radial_factor;
-        y *= radial_factor;
+        xx *= radial_factor;
+        yy *= radial_factor;
     }
     glEnd();
 }
@@ -68,64 +72,61 @@ void Display(void)
   glClear(GL_COLOR_BUFFER_BIT);
   glLineWidth (5.0);
 
-  float x1 = R1*sin(angle1);
-  float y1 = -R1*cos(angle1);
-  float x2 = R2*sin(angle2) + x1;
-  float y2 = -R2*cos(angle2) + y1;
-
 	glPushMatrix();
-			glEnable (GL_LINE_SMOOTH);
-			glEnable( GL_BLEND);
-			glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glHint ( GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+		glRotatef((GLfloat) angle1*180/M_PI,0.0f,0.0f,1.0f);
 
 		glBegin(GL_LINES);
 			glColor3f(1.0f, 0.0f, 0.0f);
 			glVertex2f(0.0f, 0.0f);
 			glColor3f(1.0f, 0.0f, 0.0f);
-			glVertex2f((GLfloat)x1,(GLfloat)y1);	
+			glVertex2f((GLfloat)xx1,(GLfloat)yy1);	
 		glEnd();
 
-
-		glBegin(GL_LINES);
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glVertex2f(x1, y1);
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glVertex2f((GLfloat)x2,(GLfloat)y2);
-		glEnd();
-		
 		glLineWidth (1.0);
 		glBegin(GL_POLYGON);
 		glColor3f(1.0f, 0.0f, 1.0f);
-			drawCircle(x1,y1,0.03f,100);
-		glEnd();
-
-		glBegin(GL_POLYGON);
-		glColor3f(1.0f, 0.0f, 1.0f);
-			drawCircle(x2,y2,0.03f,100);
+			drawCircle(xx1,yy1,0.03f,30);
 		glEnd();
 
 		glBegin(GL_POLYGON);
 		glColor3f(0.0f, 0.0f, 0.0f);
-			drawCircle(0,0,0.03f,100);
+			drawCircle(0.0f,0.0f,0.03f,30);
 		glEnd();
-
-		glDisable (GL_LINE_SMOOTH);
-		glDisable( GL_BLEND);
-		
 	glPopMatrix();
 
-	glLineWidth (1.0);
+	glLineWidth (5.0);
+
+	glPushMatrix();
+
+		glRotatef((GLfloat) angle1*180/M_PI,0.0f,0.0f,1.0f);
+		glTranslatef(0.0f,(GLfloat)-R1,0.0f);
+		glRotatef((GLfloat) angle2*180/M_PI, 0.0f, 0.0f, 1.0f);
+
+		glBegin(GL_LINES);
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glVertex2f((GLfloat)0.0f, (GLfloat)0.0f);
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glVertex2f((GLfloat)xx2,(GLfloat)yy2);
+		glEnd();
+
+		glLineWidth (1.0);
+		glBegin(GL_POLYGON);
+		glColor3f(1.0f, 0.0f, 1.0f);
+			drawCircle(xx2,yy2,0.03f,30);
+		glEnd();
+		
+	glPopMatrix();
 
 	glutSwapBuffers();
 	glFlush();
 }
 void lagrange(void){
 
-	float a = -(M1+M2) *g*R1 * sin(angle1) - M2*R1*R2*pow(angle2dot,2)*sin(angle1-angle2);
+	float a = (-(M1+M2) *g*R1 * sin(angle1)) - (M2*R1*R2*pow(angle2dot,2)*sin(angle1-angle2));
 	float b = (M1+M2) *pow(R1,2);
 	float c = M1*R1*R2*cos(angle1-angle2);
-	float f = -M2*g*R2*sin(angle2)+M2*R1*R2*pow(angle1dot,2)*sin(angle1-angle2);
+	float f = (-M2*g*R2*sin(angle2))+(M2*R1*R2*pow(angle1dot,2)*sin(angle1-angle2));
 	float k = M2*pow(R2,2);
 	float w = M2*R1*R2*cos(angle1-angle2);
 
