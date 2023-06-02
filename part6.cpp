@@ -24,12 +24,14 @@ int alto_textura = ALTO_TEXTURA_PARED;
 int ancho_textura = ANCHO_TEXTURA_PARED;
 
 float posicio_apunta_x = 0;
-float posicio_apunta_y =0;
-float posicio_apunta_z =0;
+float posicio_apunta_y =0.5;
+float posicio_apunta_z =-1;
 
-float posicio_camera_x = 0;
-float posicio_camera_y =0;
-float posicio_camera_z =3;
+float posicio_camera_x = 0.0;
+float posicio_camera_y =0.5;
+float posicio_camera_z =-0.5;
+
+int direccio =1;
 
 float angleincrement = 0.0f;
 int sentit = 1;
@@ -41,21 +43,88 @@ GLuint nombreTexturas[MAX_TEXTURAS];
 
 
 void crearParedes(){
-    
+
+        glPushMatrix();
+        //paret B
+        glBegin(GL_POLYGON);
+        glNormal3f(-1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
+        glVertex3f(1.0,0.0,0.0);
+        glNormal3f(-1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
+        glVertex3f(1.0,1.0,0.0);
+        glNormal3f(-1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
+        glVertex3f(1.0,1.0,-5.0);
+        glNormal3f(-1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
+        glVertex3f(1.0,0.0,-5.0);
+        glEnd();
+
+        //paret C
+        glBegin(GL_POLYGON);
+        glNormal3f(0.0,0.0,1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
+        glVertex3f(1.0,0.0,-5.0);
+        glNormal3f(0.0,0.0,1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
+        glVertex3f(1.0,1.0,-5.0);
+        glNormal3f(0.0,0.0,1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
+        glVertex3f(-1.0,1.0,-5.0);
+        glNormal3f(0.0,0.0,1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
+        glVertex3f(-1.0,0.0,-5.0);
+        glEnd();
+
+        //paret D
+        glBegin(GL_POLYGON);
+        glNormal3f(1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
+        glVertex3f(-1.0,0.0,-5.0);
+        glNormal3f(1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
+        glVertex3f(-1.0,1.0,-5.0);
+        glNormal3f(1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
+        glVertex3f(-1.0,1.0,0.0);
+        glNormal3f(1.0,0.0,0.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
+        glVertex3f(-1.0,0.0,0.0);
+        glEnd();
+
+        //paret A
+        glBegin(GL_POLYGON);
+        glNormal3f(0.0,0.0,-1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
+        glVertex3f(-1.0,0.0,0.0);
+        glNormal3f(0.0,0.0,-1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
+        glVertex3f(-1.0,1.0,0.0);
+        glNormal3f(0.0,0.0,-1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
+        glVertex3f(1.0,1.0,0.0);
+        glNormal3f(0.0,0.0,-1.0);
+        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
+        glVertex3f(1.0,0.0,0.0);
+        glEnd();
+        glPopMatrix();
+        
         glPushMatrix();
         
         glBegin(GL_POLYGON);
 
-        //glNormal3f(0.0,0.0,1.0);
-
+        glNormal3f(0.0,1.0,0.0);
+        
+        glColor3f(1.0,1.0,1.0);
         glMultiTexCoord2fARB(GL_TEXTURE1,0.0, 0.0);
-        glVertex2f(-1.0, 0.0);
+        glVertex3f(-1.0, 0.0, 0.0);
         glMultiTexCoord2fARB(GL_TEXTURE1,0.0, 1.0);
-        glVertex2f(-1.0, 1.0);
+        glVertex3f(-1.0, 0.0,-5.0);
         glMultiTexCoord2fARB(GL_TEXTURE1,1.0, 1.0);
-        glVertex2f(1.0, 1.0);
+        glVertex3f(1.0, 0.0, -5.0);
         glMultiTexCoord2fARB(GL_TEXTURE1,1.0, 0.0);
-        glVertex2f(1.0, 0.0);
+        glVertex3f(1.0, 0.0,0.0);
         glEnd();
 
         glPopMatrix();
@@ -63,7 +132,7 @@ void crearParedes(){
 
 void Display(void){
 
-    glClearColor (0.7,0.7,0.7,0.7);
+    glClearColor (0.0,0.0,0.0,0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   
@@ -83,7 +152,7 @@ void eventoVentana(GLsizei ancho, GLsizei alto)
     glViewport(0, 0, ancho, alto);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity(); // compara aquí amb ortho i frustrum
-	gluPerspective(45.0f,(GLdouble) ancho/alto , 1.0, 10.0);
+	gluPerspective(45.0f,(GLdouble) ancho/alto , 0.0, 10.0);
 }
 
 void leeTextura (char *fichero, int torn) {
@@ -178,101 +247,57 @@ void llum(void){
     glShadeModel(GL_SMOOTH);
 }
 
+void gira_vista_y(){
+    double vista_x = posicio_apunta_x;
+    double vista_z = posicio_apunta_z;
+    float angle = direccio*1*M_PI/180;
+
+    posicio_apunta_x = vista_x*cos(angle) -vista_z*sin(angle);
+    posicio_apunta_z = vista_x*sin(angle) +vista_z*cos(angle);
+    glutPostRedisplay();
+}
+
+void gira_vista_x(){
+    double vista_z = posicio_apunta_z;
+    double vista_y = posicio_apunta_y;
+    float angle = direccio*1*M_PI/180;
+
+    posicio_apunta_y = vista_y* cos(angle) -vista_z* sin(angle);
+	posicio_apunta_z = vista_y* sin(angle) + vista_z* cos(angle);
+    glutPostRedisplay();
+}
+
 void ProcessSpecialKeys(int key, int x, int y)
 {
     if (key == GLUT_KEY_LEFT)
     {
-        posicio_apunta_x += 0.1;
+        direccio =-1;
+        gira_vista_y();
     }else if(key == GLUT_KEY_RIGHT){
-		posicio_apunta_x -= 0.1;
+		direccio = 1;
+        gira_vista_y();
 	}else if (key == GLUT_KEY_UP){
-		posicio_apunta_y -=0.1;
+		direccio =1;
+        gira_vista_x();
 	}else if (key == GLUT_KEY_DOWN){
-		posicio_apunta_y += 0.1;
+		direccio = -1;
+        gira_vista_x();
 	}
-
-    glutPostRedisplay();
 }
 
-void volta_eixy(){
-
-
-	double posi_x = posicio_camera_x;
-	double posi_z = posicio_camera_z;
-	int passes = 0;
-	angleincrement = sentit*1*M_PI/180;
-
-	if(angleincrement >= 2*M_PI) {
-		angleincrement = 0.0f;
-	}
-					posicio_camera_x = posi_x* cos(angleincrement) -posi_z* sin(angleincrement);
-					posicio_camera_z = posi_x* sin(angleincrement) + posi_z* cos(angleincrement);
-					glutPostRedisplay();
-					sleep(0.1);
-
-}
-
-void volta_eixx(){
-
-
-	double posi_x = posicio_camera_x;
-	double posi_y = posicio_camera_y;
-	int passes = 0;
-	angleincrement = sentit*1*M_PI/180;
-
-	if(angleincrement >= 2*M_PI) {
-		angleincrement = 0.0f;
-	}
-					posicio_camera_x = posi_x* cos(angleincrement) +posi_y* sin(angleincrement);
-					posicio_camera_y = -posi_x* sin(angleincrement) + posi_y* cos(angleincrement);
-					glutPostRedisplay();
-					sleep(0.1);
-
-}
 
 void ProcessNormalKeys(unsigned char tecla, int x, int y){
+    float angle = atan(posicio_apunta_z/posicio_apunta_x);
 
 	switch(tecla){
 		case 'w':
-				if(posicio_camera_z > -5){
-					posicio_camera_z -= 0.1;
-				}
 			break;
 		case 's':
-				if(posicio_camera_z < 5){
-					posicio_camera_z += 0.1;
-				}
 				break;
 		case 'd':
-				if(posicio_camera_x < 5){
-					posicio_camera_x += 0.1;
-				}
 				break;
 		case 'a':
-				if(posicio_camera_x > -5){
-					posicio_camera_x -= 0.1;
-				}
-				break;
-		case 'x':
-				if(posicio_camera_y < 5){
-					posicio_camera_y +=0.1;
-				}
-				break;
-		case 'z':
-				if(posicio_camera_y > -5){
-					posicio_camera_y -=0.1;
-				}
-			break;
-		case 'r':
-				sentit *= -1;
-				break;
-		case 'e':
-				{std::thread t1(volta_eixy);
-				t1.join();}
-				break;
-		case 'f':
-				{std::thread t2(volta_eixx);
-				t2.join();}
+
 				break;
 	}
 	glutPostRedisplay();
@@ -306,14 +331,14 @@ int main(int argc, char **argv)
 	glutDisplayFunc(Display);
 	//glutIdleFunc(lagrange);
 	glutSpecialFunc(ProcessSpecialKeys);
-	glutKeyboardFunc(ProcessNormalKeys);
+	//glutKeyboardFunc(ProcessNormalKeys);
 
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	//glOrtho(-1.0, 1.0f, -1.0, 1.0f, -1.0, 1.0f); // minims i màxims x,y i z que veim
 
     opcionesVisualizacion();
     material();
-    llum();
+    //llum();
 
 	// Comienza la ejecuci�n del core de GLUT
 	glutMainLoop();
