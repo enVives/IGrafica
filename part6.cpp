@@ -20,20 +20,22 @@
 const int W_WIDTH = 500; // Tama�o incial de la ventana
 const int W_HEIGHT = 500;
 
+const float limit = 0.000001;
+
 int alto_textura = ALTO_TEXTURA_PARED;
 int ancho_textura = ANCHO_TEXTURA_PARED;
 
-float posicio_apunta_x = 0;
-float posicio_apunta_y =0.5;
-float posicio_apunta_z =-1;
+float posicio_apunta_x = 0.0f;
+float posicio_apunta_y =0.5f;
+float posicio_apunta_z =-1.0f;
 
-float posicio_camera_x = 0.0;
-float posicio_camera_y =0.5;
-float posicio_camera_z =-0.5;
+float posicio_camera_x = 0.0f;
+float posicio_camera_y =0.5f;
+float posicio_camera_z =-0.5f;
 
+float anglexz = 0.0;
+float anglexy = 0.0;
 int direccio =1;
-
-float angleincrement = 0.0f;
 int sentit = 1;
 
 GLubyte textura_pared[ALTO_TEXTURA_PARED][ANCHO_TEXTURA_PARED][3]; /* vector de texturas */
@@ -140,7 +142,15 @@ void Display(void){
     glLoadIdentity();
     gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, 0.0, 1.0, 0.0);
 
+
     crearParedes();
+
+    glPushMatrix();
+        glTranslatef(posicio_apunta_x,posicio_apunta_y,posicio_apunta_z);
+        glColor3f(1.0f,1.0f,1.0f);
+        glutSolidSphere(0.005,30.0,30.0);
+    glPopMatrix();
+
 
     glutSwapBuffers();
 	glFlush();
@@ -247,57 +257,191 @@ void llum(void){
     glShadeModel(GL_SMOOTH);
 }
 
-void gira_vista_y(){
-    double vista_x = posicio_apunta_x;
-    double vista_z = posicio_apunta_z;
-    float angle = direccio*1*M_PI/180;
+void gira_vista_y(float angle){
+    float vista_x = posicio_apunta_x;
+    float vista_z = posicio_apunta_z;
+    //float angle = direccio*1*M_PI/180;
 
     posicio_apunta_x = vista_x*cos(angle) -vista_z*sin(angle);
     posicio_apunta_z = vista_x*sin(angle) +vista_z*cos(angle);
+    anglexz += angle;
+    
+    if(anglexz >=0){
+        if(anglexz >= 360*M_PI/180){
+            anglexz = 360*M_PI/180 -anglexz;
+        }
+    }else{
+        if(anglexz <= -1*360*M_PI/180){
+            anglexz = anglexz +360*M_PI/180;
+        }
+    }
     glutPostRedisplay();
 }
 
-void gira_vista_x(){
-    double vista_z = posicio_apunta_z;
-    double vista_y = posicio_apunta_y;
-    float angle = direccio*1*M_PI/180;
+void gira_vista_x(float angle){
+    float vista_z = posicio_apunta_z;
+    float vista_y = posicio_apunta_y;
+    //float angle = direccio*1*M_PI/180;
 
     posicio_apunta_y = vista_y* cos(angle) -vista_z* sin(angle);
 	posicio_apunta_z = vista_y* sin(angle) + vista_z* cos(angle);
+    anglexy += angle;
+    
+
+    if(anglexy >=0){
+        if(anglexy >= 360*M_PI/180){
+            anglexy = 360*M_PI/180 -anglexy;
+        }
+    }else{
+        if(anglexy <= -1*360*M_PI/180){
+            anglexy = anglexy +360*M_PI/180;
+        }
+    }
     glutPostRedisplay();
 }
+
+void trasladar_inici(){
+    posicio_apunta_x -= posicio_camera_x;
+    posicio_apunta_y -= posicio_camera_y;
+    posicio_apunta_z -= posicio_camera_z;
+}
+
+void tornar_lloc(){
+    posicio_apunta_x += posicio_camera_x;
+    posicio_apunta_y += posicio_camera_y;
+    posicio_apunta_z += posicio_camera_z;
+}
+
+void girar_inici_xz(){
+    if(anglexz <0){
+        gira_vista_y(-anglexz);
+    }else{
+        gira_vista_y(-anglexz);
+    }
+}
+
 
 void ProcessSpecialKeys(int key, int x, int y)
 {
     if (key == GLUT_KEY_LEFT)
     {
         direccio =-1;
-        gira_vista_y();
+        trasladar_inici();
+        gira_vista_y(direccio*1*M_PI/180);
+        tornar_lloc();
     }else if(key == GLUT_KEY_RIGHT){
 		direccio = 1;
-        gira_vista_y();
+        trasladar_inici();
+        gira_vista_y(direccio*1*M_PI/180);
+        tornar_lloc();
 	}else if (key == GLUT_KEY_UP){
-		direccio =1;
-        gira_vista_x();
+        direccio = 1;
+        trasladar_inici();
+        float anglexz_copia = anglexz;
+        girar_inici_xz();
+        gira_vista_x(direccio*1*M_PI/180);
+        gira_vista_y(anglexz_copia);
+        tornar_lloc();
 	}else if (key == GLUT_KEY_DOWN){
 		direccio = -1;
-        gira_vista_x();
+        trasladar_inici();
+        float anglexz_copia = anglexz;
+        girar_inici_xz();
+        gira_vista_x(direccio*1*M_PI/180);
+        gira_vista_y(anglexz_copia);
+        tornar_lloc();
 	}
 }
 
 
+void moure_camera(int cas){
+    float angle;
+    trasladar_inici();
+
+    if(posicio_apunta_z<0){
+        if(posicio_apunta_x>0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x) +360.0*M_PI/180;
+        }else if(posicio_apunta_x <0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x) +180.0*M_PI/180;
+        }else{
+            angle = 270.0f*M_PI/180;
+        }
+    }else if(posicio_apunta_z>0){
+        if(posicio_apunta_x>0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x);
+        }else if (posicio_apunta_x<0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x) +180*M_PI/180;
+        }else{
+            angle = 90.0f*M_PI/180;
+        }
+    }else{
+        if(posicio_apunta_x <0){
+            angle = 180.0f*M_PI/180;
+        }else{
+            angle = 0.0f*M_PI/180;
+        }
+    }
+
+
+    switch(cas){
+        case 3:
+        angle -= 90.0f*M_PI/180;
+        break;
+        case 4:
+        angle -= 90.0f*M_PI/180;
+        break;
+    }
+
+    float posicio_x = cos(angle);
+    float posicio_z = sin(angle);
+
+    if(fabs(posicio_x)< limit){
+        posicio_x = 0.0f;
+    }
+
+    if(fabs(posicio_z)< limit){
+        posicio_z = 0.0f;
+    }
+
+    switch(cas){
+        case 1:
+        posicio_camera_x += 0.05*posicio_x;
+        posicio_camera_z += 0.05*posicio_z;
+        break;
+        case 2:
+        posicio_camera_x -= 0.05*posicio_x;
+        posicio_camera_z -= 0.1*posicio_z;
+        break;
+        case 3:
+        posicio_camera_x -= 0.05*posicio_x;
+        posicio_camera_z -= 0.1*posicio_z;
+        break;
+        case 4:
+        posicio_camera_x += 0.05*posicio_x;
+        posicio_camera_z += 0.05*posicio_z;
+        break;
+    }
+
+    tornar_lloc();
+
+}
+
+
 void ProcessNormalKeys(unsigned char tecla, int x, int y){
-    float angle = atan(posicio_apunta_z/posicio_apunta_x);
+    
 
 	switch(tecla){
 		case 'w':
+            moure_camera(1);
 			break;
 		case 's':
+            moure_camera(2);
 				break;
 		case 'd':
+            moure_camera(3);
 				break;
 		case 'a':
-
+            moure_camera(4);
 				break;
 	}
 	glutPostRedisplay();
@@ -315,6 +459,7 @@ void opcionesVisualizacion(void)
 
 }
 
+
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
@@ -331,7 +476,8 @@ int main(int argc, char **argv)
 	glutDisplayFunc(Display);
 	//glutIdleFunc(lagrange);
 	glutSpecialFunc(ProcessSpecialKeys);
-	//glutKeyboardFunc(ProcessNormalKeys);
+	glutKeyboardFunc(ProcessNormalKeys);
+
 
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	//glOrtho(-1.0, 1.0f, -1.0, 1.0f, -1.0, 1.0f); // minims i màxims x,y i z que veim
