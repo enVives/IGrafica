@@ -9,12 +9,15 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#define MAX_TEXTURAS       2  /* numero maximo de texturas */
+#define MAX_TEXTURAS       4 /* numero maximo de texturas */
 #define ALTO_TEXTURA_PARED     1280   /* alto de la imagen a texturar */
 #define ANCHO_TEXTURA_PARED    769  /* ancho de la imagen a texturar  */
 
 #define ALTO_TEXTURA_SUELO     540  /* alto de la imagen a texturar */
 #define ANCHO_TEXTURA_SUELO    360  /* ancho de la imagen a texturar  */
+
+#define ALTO_TEXTURA_SOSTRE     600  /* alto de la imagen a texturar */
+#define ANCHO_TEXTURA_SOSTRE   600  /* ancho de la imagen a texturar  */
 
 
 const int W_WIDTH = 500; // Tama�o incial de la ventana
@@ -40,101 +43,127 @@ int sentit = 1;
 
 GLubyte textura_pared[ALTO_TEXTURA_PARED][ANCHO_TEXTURA_PARED][3]; /* vector de texturas */
 GLubyte textura_enterra[ALTO_TEXTURA_SUELO][ANCHO_TEXTURA_SUELO][3]; /* vector de texturas */
+GLubyte textura_sostre[ALTO_TEXTURA_SOSTRE][ANCHO_TEXTURA_SOSTRE][3]; /* vector de texturas */
 GLuint nombreTexturas[MAX_TEXTURAS];
 
+static GLfloat paretsdata [24][3] = {{-1,0,0},{-1,1,0},{1,1,0},{1,0,0},
+    {1,0,-1},{1,1,-1},{1,1,-2},{1,0,-2},{1,0,-3},{1,1,-3},{1,1,-4},{1,0,-4},
+    {1,0,-5},{1,1,-5},{-1,1,-5},{-1,0,-5},{-1,0,-4},{-1,1,-4},{-1,1,-3},{-1,0,-3},
+    {-1,0,-2},{-1,1,-2},{-1,1,-1},{-1,0,-1}
+    };
+
+static GLuint paretsindexs[12][4] = {{0,1,2,3},{2,3,4,5},{4,5,6,7},{6,7,8,9},
+    {8,9,10,11},{10,11,12,13},{12,13,14,15},{14,15,16,17},{16,17,18,19},
+    {18,19,20,21},{20,21,22,23},{22,23,0,1}};
+
+static GLfloat normaleParets[24][3] = {{1,0,0},{1,-1,0},{-1,-1,0},{-1,0,0},
+    {-1,0,1},{-1,-1,1},{-1,-1,2},{-1,0,2},{-1,0,3},{-1,-1,3},{-1,-1,4},{-1,0,4},
+    {-1,0,5},{-1,-1,5},{1,-1,5},{1,0,5},{1,0,4},{1,-1,4},{1,-1,3},{1,0,3},
+    {1,0,2},{1,-1,2},{1,-1,1},{1,0,1}
+    };
+GLUquadricObj *objCylinder = gluNewQuadric();
 
 
 void crearParedes(){
 
+        glBindTexture(GL_TEXTURE_2D, nombreTexturas[0]);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glPushMatrix();
-        //paret B
-        glBegin(GL_POLYGON);
-        glNormal3f(-1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
-        glVertex3f(1.0,0.0,0.0);
-        glNormal3f(-1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
-        glVertex3f(1.0,1.0,0.0);
-        glNormal3f(-1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
-        glVertex3f(1.0,1.0,-5.0);
-        glNormal3f(-1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
-        glVertex3f(1.0,0.0,-5.0);
-        glEnd();
+        for(int i=0;i<12;i++){
+            glBegin(GL_POLYGON);
+                    glColor3f(0.7,0.7,0.7);
+                    glTexCoord2f(0.0,0.0);
+                    glNormal3fv(&normaleParets[paretsindexs[i][0]][0]);
+                    glVertex3fv(&paretsdata[paretsindexs[i][0]][0]);
 
-        //paret C
-        glBegin(GL_POLYGON);
-        glNormal3f(0.0,0.0,1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
-        glVertex3f(1.0,0.0,-5.0);
-        glNormal3f(0.0,0.0,1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
-        glVertex3f(1.0,1.0,-5.0);
-        glNormal3f(0.0,0.0,1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
-        glVertex3f(-1.0,1.0,-5.0);
-        glNormal3f(0.0,0.0,1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
-        glVertex3f(-1.0,0.0,-5.0);
-        glEnd();
+                    glColor3f(0.7,0.7,0.7);
+                    glTexCoord2f(0.0,1.0);
+                    glNormal3fv(&normaleParets[paretsindexs[i][0]][0]);
+                    glVertex3fv(&paretsdata[paretsindexs[i][1]][0]);
 
-        //paret D
-        glBegin(GL_POLYGON);
-        glNormal3f(1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
-        glVertex3f(-1.0,0.0,-5.0);
-        glNormal3f(1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
-        glVertex3f(-1.0,1.0,-5.0);
-        glNormal3f(1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
-        glVertex3f(-1.0,1.0,0.0);
-        glNormal3f(1.0,0.0,0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
-        glVertex3f(-1.0,0.0,0.0);
-        glEnd();
+                    glColor3f(0.7,0.7,0.7);
+                    glTexCoord2f(1.0,1.0);
+                    glNormal3fv(&normaleParets[paretsindexs[i][0]][0]);
+                    glVertex3fv(&paretsdata[paretsindexs[i][2]][0]);
 
-        //paret A
-        glBegin(GL_POLYGON);
-        glNormal3f(0.0,0.0,-1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 0.0);
-        glVertex3f(-1.0,0.0,0.0);
-        glNormal3f(0.0,0.0,-1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,0.0, 1.0);
-        glVertex3f(-1.0,1.0,0.0);
-        glNormal3f(0.0,0.0,-1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 1.0);
-        glVertex3f(1.0,1.0,0.0);
-        glNormal3f(0.0,0.0,-1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE0,1.0, 0.0);
-        glVertex3f(1.0,0.0,0.0);
-        glEnd();
+                    glColor3f(0.7,0.7,0.7);
+                    glTexCoord2f(1.0,0.0);
+                    glNormal3fv(&normaleParets[paretsindexs[i][0]][0]);
+                    glVertex3fv(&paretsdata[paretsindexs[i][3]][0]);
+            glEnd();
+        }
         glPopMatrix();
         
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+        glBindTexture(GL_TEXTURE_2D, nombreTexturas[1]);
+
         glPushMatrix();
         
         glBegin(GL_POLYGON);
 
-        glNormal3f(0.0,1.0,0.0);
         
-        glColor3f(1.0,1.0,1.0);
-        glMultiTexCoord2fARB(GL_TEXTURE1,0.0, 0.0);
+
+        glTexCoord2f(0.0,0.0);
+        glNormal3f(0.0,1.0,0.0);
         glVertex3f(-1.0, 0.0, 0.0);
-        glMultiTexCoord2fARB(GL_TEXTURE1,0.0, 1.0);
+        glTexCoord2f(0.0,1.0);
+        glNormal3f(0.0,1.0,0.0);
         glVertex3f(-1.0, 0.0,-5.0);
-        glMultiTexCoord2fARB(GL_TEXTURE1,1.0, 1.0);
+        glTexCoord2f(1.0,1.0);
+        glNormal3f(0.0,1.0,0.0);
         glVertex3f(1.0, 0.0, -5.0);
-        glMultiTexCoord2fARB(GL_TEXTURE1,1.0, 0.0);
+        glTexCoord2f(1.0,0.0);
+        glNormal3f(0.0,1.0,0.0);
         glVertex3f(1.0, 0.0,0.0);
         glEnd();
 
         glPopMatrix();
+        //corregir
+
+        /*
+        glBindTexture(GL_TEXTURE_2D, nombreTexturas[1]);
+
+        glPushMatrix();
+            glEnable(GL_TEXTURE_GEN_S);
+            glEnable(GL_TEXTURE_GEN_T);
+            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+
+            glTranslated(-1,0,0);
+            glRotatef(-90.0,1,0,0);
+            gluCylinder(objCylinder,0.10,0.10,1,12,8);
+
+            glDisable(GL_TEXTURE_GEN_S);
+            glDisable(GL_TEXTURE_GEN_T);
+        glPopMatrix();*/
+
 }
+
+void pintarSostre(){
+    glBindTexture(GL_TEXTURE_2D, nombreTexturas[2]);
+    glPushMatrix();
+        glBegin(GL_POLYGON);
+            glTexCoord2f(0.0,0.0);
+            glNormal3f(0.0,-1.0,0.0);
+            glVertex3f(-1.0, 1.0, 0.0);
+            glTexCoord2f(0.0,1.0);
+            glNormal3f(0.0,-1.0,0.0);
+            glVertex3f(-1.0, 1.0,-5.0);
+            glTexCoord2f(1.0,1.0);
+            glNormal3f(0.0,-1.0,0.0);
+            glVertex3f(1.0, 1.0, -5.0);
+            glTexCoord2f(1.0,0.0);
+            glNormal3f(0.0,-1.0,0.0);
+            glVertex3f(1.0, 1.0,0.0);
+        glEnd();
+    glPopMatrix();
+}
+
+
 
 void Display(void){
 
-    glClearColor (0.0,0.0,0.0,0.0);
+    glClearColor(0.0,0.0,0.0,0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   
@@ -142,15 +171,17 @@ void Display(void){
     glLoadIdentity();
     gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, 0.0, 1.0, 0.0);
 
+    glEnable(GL_TEXTURE_2D);
 
     crearParedes();
+    pintarSostre();
+    glDisable(GL_TEXTURE_2D);
 
     glPushMatrix();
-        glTranslatef(posicio_apunta_x,posicio_apunta_y,posicio_apunta_z);
-        glColor3f(1.0f,1.0f,1.0f);
-        glutSolidSphere(0.005,30.0,30.0);
+    glTranslatef(posicio_apunta_x,posicio_apunta_y,posicio_apunta_z);
+    glColor3f(1.0,1.0,1.0);
+    glutSolidSphere(0.005,30.0,30.0);
     glPopMatrix();
-
 
     glutSwapBuffers();
 	glFlush();
@@ -184,6 +215,9 @@ void leeTextura (char *fichero, int torn) {
         }else if(torn == 1){
             alto_textura = ALTO_TEXTURA_SUELO;
             ancho_textura = ANCHO_TEXTURA_SUELO;
+        }else if(torn ==2){
+            alto_textura = ALTO_TEXTURA_SOSTRE;
+            ancho_textura = ANCHO_TEXTURA_SOSTRE;
         }
         /* Lee la imagen */
         for (j=alto_textura-1; j>=0; j--) {
@@ -197,6 +231,10 @@ void leeTextura (char *fichero, int torn) {
                  textura_enterra[j][i][0] = (GLubyte)r;
                  textura_enterra[j][i][1] = (GLubyte)g;
                  textura_enterra[j][i][2] = (GLubyte)b; 
+                }else if(torn ==2){
+                 textura_sostre[j][i][0] = (GLubyte)r;
+                 textura_sostre[j][i][1] = (GLubyte)g;
+                 textura_sostre[j][i][2] = (GLubyte)b; 
                 }
                 
             }
@@ -214,7 +252,8 @@ void material (void) {
   leeTextura(nom,0);
   char nom1 [] = "enterre.tga";
   leeTextura(nom1,1);
-  
+  char nom2 [] = "sostre.tga";
+  leeTextura(nom2,2);
   /* Definici�n de los par�metros iniciales de texturacion */ 
   glBindTexture(GL_TEXTURE_2D, nombreTexturas[0]); 
 
@@ -225,7 +264,7 @@ void material (void) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  
+
   glBindTexture(GL_TEXTURE_2D, nombreTexturas[1]);
   
   glTexImage2D(GL_TEXTURE_2D, 0, 3, 540, 360, 
@@ -234,24 +273,24 @@ void material (void) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  glBindTexture(GL_TEXTURE_2D, nombreTexturas[2]);
   
-  glActiveTextureARB (GL_TEXTURE0);
-  glEnable        (GL_TEXTURE_2D);
-  glBindTexture   (GL_TEXTURE_2D, nombreTexturas[0]);
-  glTexEnvi       (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  
-  /* unidad de textura 2 */
-  glActiveTextureARB (GL_TEXTURE1);
-  glEnable        (GL_TEXTURE_2D);
-  glBindTexture   (GL_TEXTURE_2D, nombreTexturas[1]);
-  glTexEnvi       (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, 600, 600, 
+	       0, GL_RGB, GL_UNSIGNED_BYTE, textura_sostre);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 }
 
 void llum(void){
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable (GL_LINE_SMOOTH);
     glEnable( GL_BLEND);
+    glEnable(GL_NORMALIZE);
+    
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glHint ( GL_LINE_SMOOTH_HINT, GL_NICEST);
     glShadeModel(GL_SMOOTH);
@@ -450,8 +489,12 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
 
 void opcionesVisualizacion(void)
 {
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
+    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+    glShadeModel  (GL_SMOOTH);
+    glDepthFunc   (GL_LEQUAL);
+    glEnable      (GL_DEPTH_TEST); //ZBuffer
+    glEnable      (GL_NORMALIZE);
+
     printf(" flecha superior - enfocar la càmera cap a dalt\n");
     printf(" flecha inferior - enfocar la càmera cap a baix\n");
     printf("flecha esquerre - enfocar la càmera cap a l'esquerre\n");
@@ -474,7 +517,7 @@ int main(int argc, char **argv)
 
     glutReshapeFunc(eventoVentana);
 	glutDisplayFunc(Display);
-	//glutIdleFunc(lagrange);
+
 	glutSpecialFunc(ProcessSpecialKeys);
 	glutKeyboardFunc(ProcessNormalKeys);
 
