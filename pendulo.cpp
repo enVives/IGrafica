@@ -1,6 +1,7 @@
 // Doble Pèndul
 // Simulació del doble Pèndul utilitzant les equacions de Lagrange
 // Pere Joan Vives Morey i Arnau Vidal Moreno
+//Código para ejecutar : g++ pendulo.cpp -o pendulo -lGL -lGLU -lglut
 
 #include <GL/glut.h>
 #include <GL/gl.h>
@@ -30,35 +31,30 @@ float yy1 = -R1;
 float xx2 = 0.0f;
 float yy2 = -R2;
 
+//función que nos dibuja un círculo dados una posición, un radio y un número de segmentos.
 void drawCircle(float cx, float cy, float r, int num_segments)
 {
     float theta = 3.1415926 * 2 / float(num_segments);
-    float tangetial_factor = tanf(theta);//calculate the tangential factor 
+    float tangetial_factor = tanf(theta);
 
-    float radial_factor = cosf(theta);//calculate the radial factor 
+    float radial_factor = cosf(theta);
 
-    float xx = r;//we start at angle = 0 
+    float xx = r;
 
     float yy = 0;
     glLineWidth(2);
     glBegin(GL_POLYGON);
     for (int ii = 0; ii < num_segments; ii++)
     {
-        glVertex2f(xx + cx, yy + cy);//output vertex 
+        glVertex2f(xx + cx, yy + cy);
 
-        //calculate the tangential vector 
-        //remember, the radial vector is (x, y) 
-        //to get the tangential vector we flip those coordinates and negate one of them 
 
         float tx = -yy;
         float ty = xx;
 
-        //add the tangential vector 
-
         xx += tx * tangetial_factor;
         yy += ty * tangetial_factor;
 
-        //correct using the radial factor 
 
         xx *= radial_factor;
         yy *= radial_factor;
@@ -72,10 +68,16 @@ void Display(void)
   glClear(GL_COLOR_BUFFER_BIT);
   glLineWidth (5.0);
 
+	//en este primer push matrix vamos a pintar el primer brazo del péndulo
+	//vamos a rotarlo con el angulo1
+	//luego pintamos dos círculos, que representan los puntos de unión 
+	//del principio del péndulo i del segundo brazo
+
 	glPushMatrix();
 
 		glRotatef((GLfloat) angle1*180/M_PI,0.0f,0.0f,1.0f);
 
+		//primer brazo
 		glBegin(GL_LINES);
 			glColor3f(1.0f, 0.0f, 0.0f);
 			glVertex2f(0.0f, 0.0f);
@@ -83,20 +85,30 @@ void Display(void)
 			glVertex2f((GLfloat)xx1,(GLfloat)yy1);	
 		glEnd();
 
-		glLineWidth (1.0);
-		glBegin(GL_POLYGON);
-		glColor3f(1.0f, 0.0f, 1.0f);
-			drawCircle(xx1,yy1,0.03f,30);
-		glEnd();
+		//primer círculo, este unirá el primer brazo con el segundo
+		glPushMatrix();
+			glTranslatef(xx1,yy1,0.0f);
+			glBegin(GL_POLYGON);
+				glColor3f(1.0f, 0.0f, 1.0f);
+				drawCircle(0.0f,0.0f,0.03f,30);
+			glEnd();
+		glPopMatrix();
 
+		//segundo círculo, este estará al inicio
 		glBegin(GL_POLYGON);
 		glColor3f(0.0f, 0.0f, 0.0f);
 			drawCircle(0.0f,0.0f,0.03f,30);
 		glEnd();
+
 	glPopMatrix();
 
 	glLineWidth (5.0);
 
+	//en este pushMatrix vamos a pintar el segundo brazo i el círculo que está al final del péndulo
+	//el orden de las transformaciones va a ser el siguiente
+	//1) giramos el brazo con su ángulo (angle2)
+	//2) lo movemos donde el primer brazo terminaba al inicio
+	//3) lo volvemos a girar pero ahora con el angulo del primer brazo.
 	glPushMatrix();
 
 		glRotatef((GLfloat) angle1*180/M_PI,0.0f,0.0f,1.0f);
@@ -111,9 +123,10 @@ void Display(void)
 		glEnd();
 
 		glLineWidth (1.0);
+		glTranslatef(xx2,yy2,0.0f);
 		glBegin(GL_POLYGON);
 		glColor3f(1.0f, 0.0f, 1.0f);
-			drawCircle(xx2,yy2,0.03f,30);
+			drawCircle(0.0f,0.0f,0.03f,30);
 		glEnd();
 		
 	glPopMatrix();
@@ -121,6 +134,9 @@ void Display(void)
 	glutSwapBuffers();
 	glFlush();
 }
+
+//Función donde, utilizando las funciones de lagrange sacamos los angulos que van a tenerç
+//los brazos del péndulo
 void lagrange(void){
 
 	float a = (-(M1+M2) *g*R1 * sin(angle1)) - (M2*R1*R2*pow(angle2dot,2)*sin(angle1-angle2));
@@ -141,6 +157,30 @@ void lagrange(void){
 	glutPostRedisplay();
 }
 
+//Función que modifica el volumen de visualización para que tenga las mismas 
+//proporciones que la ventana y de esta manera se evita la distorsión.
+void Reproyectar(int width, int height){
+	std::cout << "amplària "<<width << "\n";
+	std::cout <<"altura "<<height << "\n";
+
+	glViewport(0,0,width,height);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	GLfloat ratio;
+
+	if(width>height){
+		ratio = (GLfloat) width/ (GLfloat) height;
+		glOrtho(-1.0 * ratio, 1.0f*ratio, -1.0, 1.0f, -1.0, 1.0f);
+	}else{
+		ratio = (GLfloat) height/ (GLfloat) width;
+		glOrtho(-1.0, 1.0f, -1.0*ratio, 1.0f*ratio, -1.0, 1.0f);
+	}
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
@@ -153,6 +193,7 @@ int main(int argc, char **argv)
 	glutCreateWindow("Pendulo");
 
 	glutDisplayFunc(Display);
+	glutReshapeFunc(Reproyectar);
 	glutIdleFunc(lagrange);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);

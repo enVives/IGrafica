@@ -39,15 +39,26 @@ float posicio_apunta_x = 0;
 float posicio_apunta_y =0;
 float posicio_apunta_z =0;
 
-float posicio_camera_x = 5;
+float posicio_camera_x = 0;
 float posicio_camera_y =0;
-float posicio_camera_z =0;
+float posicio_camera_z =5;
+
+float verticalx = 0;
+float verticaly = 1;
+float verticalz = 0;
 
 float angleincrement = 0.0f;
+
+float anglexz = 0.0;
+float anglexy = 0.0;
+int direccio =1;
 int sentit = 1;
+
+const float limit = 0.000001;
 
 bool seguir = true;
 
+int posicio =3;
 
 
 
@@ -58,34 +69,178 @@ void eventoVentana(GLsizei ancho, GLsizei alto)
     glViewport(0, 0, ancho, alto);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity(); // compara aquí amb ortho i frustrum
-	gluPerspective(45.0f,(GLdouble) ancho/alto , 1.0, 20.0);
+	gluPerspective(45.0f,(GLdouble) ancho/alto , 0.0, 20.0);
 }
 
-void opcionesVisualizacion(void)
-{
+void gira_vista_y(float angle){
+    float vista_x = posicio_apunta_x;
+    float vista_z = posicio_apunta_z;
+    //float angle = direccio*1*M_PI/180;
 
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-    printf(" flecha superior - enfocar la càmera cap a dalt\n");
-    printf(" flecha inferior - enfocar la càmera cap a baix\n");
-    printf("flecha esquerre - enfocar la càmera cap a l'esquerre\n");
-    printf("flecha dreta - enfocar la càmera cap a la dreta\n");
-
+    posicio_apunta_x = vista_x*cos(angle) -vista_z*sin(angle);
+    posicio_apunta_z = vista_x*sin(angle) +vista_z*cos(angle);
+    anglexz += angle;
+    
+    if(anglexz >=0){
+        if(anglexz >= 360*M_PI/180){
+            anglexz = 360*M_PI/180 -anglexz;
+        }
+    }else{
+        if(anglexz <= -1*360*M_PI/180){
+            anglexz = anglexz +360*M_PI/180;
+        }
+    }
+    glutPostRedisplay();
 }
+
+void gira_vista_x(float angle){
+    float vista_z = posicio_apunta_z;
+    float vista_y = posicio_apunta_y;
+    //float angle = direccio*1*M_PI/180;
+
+    posicio_apunta_y = vista_y* cos(angle) -vista_z* sin(angle);
+	posicio_apunta_z = vista_y* sin(angle) + vista_z* cos(angle);
+    anglexy += angle;
+    
+
+    if(anglexy >=0){
+        if(anglexy >= 360*M_PI/180){
+            anglexy = 360*M_PI/180 -anglexy;
+        }
+    }else{
+        if(anglexy <= -1*360*M_PI/180){
+            anglexy = anglexy +360*M_PI/180;
+        }
+    }
+    glutPostRedisplay();
+}
+
+void trasladar_inici(){
+    posicio_apunta_x -= posicio_camera_x;
+    posicio_apunta_y -= posicio_camera_y;
+    posicio_apunta_z -= posicio_camera_z;
+}
+
+void tornar_lloc(){
+    posicio_apunta_x += posicio_camera_x;
+    posicio_apunta_y += posicio_camera_y;
+    posicio_apunta_z += posicio_camera_z;
+}
+
+void girar_inici_xz(){
+    if(anglexz <0){
+        gira_vista_y(-anglexz);
+    }else{
+        gira_vista_y(-anglexz);
+    }
+}
+
+
 void ProcessSpecialKeys(int key, int x, int y)
 {
-    if (key == GLUT_KEY_LEFT)
-    {
-        posicio_apunta_x += 0.1;
-    }else if(key == GLUT_KEY_RIGHT){
-		posicio_apunta_x -= 0.1;
-	}else if (key == GLUT_KEY_UP){
-		posicio_apunta_y -=0.1;
-	}else if (key == GLUT_KEY_DOWN){
-		posicio_apunta_y += 0.1;
+	if(posicio == 3){
+		if (key == GLUT_KEY_LEFT)
+		{
+			direccio =-1;
+			trasladar_inici();
+			gira_vista_y(direccio*1*M_PI/180);
+			tornar_lloc();
+		}else if(key == GLUT_KEY_RIGHT){
+			direccio = 1;
+			trasladar_inici();
+			gira_vista_y(direccio*1*M_PI/180);
+			tornar_lloc();
+		}else if (key == GLUT_KEY_UP){
+			direccio = 1;
+			trasladar_inici();
+			float anglexz_copia = anglexz;
+			girar_inici_xz();
+			gira_vista_x(direccio*1*M_PI/180);
+			gira_vista_y(anglexz_copia);
+			tornar_lloc();
+		}else if (key == GLUT_KEY_DOWN){
+			direccio = -1;
+			trasladar_inici();
+			float anglexz_copia = anglexz;
+			girar_inici_xz();
+			gira_vista_x(direccio*1*M_PI/180);
+			gira_vista_y(anglexz_copia);
+			tornar_lloc();
+		}	
 	}
+}
 
-    glutPostRedisplay();
+
+void moure_camera(int cas){
+    float angle;
+    trasladar_inici();
+
+    if(posicio_apunta_z<0){
+        if(posicio_apunta_x>0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x) +360.0*M_PI/180;
+        }else if(posicio_apunta_x <0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x) +180.0*M_PI/180;
+        }else{
+            angle = 270.0f*M_PI/180;
+        }
+    }else if(posicio_apunta_z>0){
+        if(posicio_apunta_x>0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x);
+        }else if (posicio_apunta_x<0){
+            angle = atan(posicio_apunta_z/posicio_apunta_x) +180*M_PI/180;
+        }else{
+            angle = 90.0f*M_PI/180;
+        }
+    }else{
+        if(posicio_apunta_x <0){
+            angle = 180.0f*M_PI/180;
+        }else{
+            angle = 0.0f*M_PI/180;
+        }
+    }
+
+
+    switch(cas){
+        case 3:
+        angle -= 90.0f*M_PI/180;
+        break;
+        case 4:
+        angle -= 90.0f*M_PI/180;
+        break;
+    }
+
+    float posicio_x = cos(angle);
+    float posicio_z = sin(angle);
+
+    if(fabs(posicio_x)< limit){
+        posicio_x = 0.0f;
+    }
+
+    if(fabs(posicio_z)< limit){
+        posicio_z = 0.0f;
+    }
+
+    switch(cas){
+        case 1:
+        posicio_camera_x += 0.05*posicio_x;
+        posicio_camera_z += 0.05*posicio_z;
+        break;
+        case 2:
+        posicio_camera_x -= 0.05*posicio_x;
+        posicio_camera_z -= 0.1*posicio_z;
+        break;
+        case 3:
+        posicio_camera_x -= 0.05*posicio_x;
+        posicio_camera_z -= 0.1*posicio_z;
+        break;
+        case 4:
+        posicio_camera_x += 0.05*posicio_x;
+        posicio_camera_z += 0.05*posicio_z;
+        break;
+    }
+
+    tornar_lloc();
+
 }
 
 void volta_eixy(){
@@ -96,9 +251,6 @@ void volta_eixy(){
 	int passes = 0;
 	angleincrement = sentit*1*M_PI/180;
 
-	if(angleincrement >= 2*M_PI) {
-		angleincrement = 0.0f;
-	}
 					posicio_camera_x = posi_x* cos(angleincrement) -posi_z* sin(angleincrement);
 					posicio_camera_z = posi_x* sin(angleincrement) + posi_z* cos(angleincrement);
 					glutPostRedisplay();
@@ -109,100 +261,161 @@ void volta_eixy(){
 void volta_eixx(){
 
 
-	double posi_x = posicio_camera_x;
+	double posi_z = posicio_camera_z;
 	double posi_y = posicio_camera_y;
 	int passes = 0;
 	angleincrement = sentit*1*M_PI/180;
 
-	if(angleincrement >= 2*M_PI) {
-		angleincrement = 0.0f;
-	}
-					posicio_camera_x = posi_x* cos(angleincrement) +posi_y* sin(angleincrement);
-					posicio_camera_y = -posi_x* sin(angleincrement) + posi_y* cos(angleincrement);
+					posicio_camera_y = posi_y* cos(angleincrement) +posi_z* sin(angleincrement);
+					posicio_camera_z = -posi_y* sin(angleincrement) + posi_z* cos(angleincrement);
 					glutPostRedisplay();
 					sleep(0.1);
 
 }
 
-void ProcessNormalKeys(unsigned char tecla, int x, int y){
+void canviar_posicio_camera(){
+	switch(posicio){
+		case 0:
+			posicio_camera_x = 0;
+			posicio_camera_y = 3;
+			posicio_camera_z = 0;
 
-	switch(tecla){
-		case 'w':
-				if(posicio_camera_z > -5){
-					posicio_camera_z -= 0.1;
-				}
+			posicio_apunta_x =0;
+			posicio_apunta_y =0;
+			posicio_apunta_z =0;
+
+			verticaly =0;
+			verticalz = -1;
 			break;
-		case 's':
-				if(posicio_camera_z < 5){
-					posicio_camera_z += 0.1;
-				}
-				break;
-		case 'd':
-				if(posicio_camera_x < 5){
-					posicio_camera_x += 0.1;
-				}
-				break;
-		case 'a':
-				if(posicio_camera_x > -5){
-					posicio_camera_x -= 0.1;
-				}
-				break;
-		case 'x':
-				if(posicio_camera_y < 5){
-					posicio_camera_y +=0.1;
-				}
-				break;
-		case 'z':
-				if(posicio_camera_y > -5){
-					posicio_camera_y -=0.1;
-				}
+		case 1:
+			posicio_camera_x = 0;
+			posicio_camera_y = 3;
+			posicio_camera_z = 3;
+
+			posicio_apunta_x =0;
+			posicio_apunta_y =0;
+			posicio_apunta_z =0;
+
+			verticaly =1;
+			verticalz = 0;
 			break;
-		case 'r':
-				sentit *= -1;
-				break;
-		case 'e':
-				{std::thread t1(volta_eixy);
-				t1.join();}
-				break;
-		case 'f':
-				{std::thread t2(volta_eixx);
-				t2.join();}
-				break;
+		case 2:
+			posicio_camera_x = 0;
+			posicio_camera_y = 0;
+			posicio_camera_z = 5;
+
+			posicio_apunta_x =0;
+			posicio_apunta_y =0;
+			posicio_apunta_z =0;
+
+			verticaly =1;
+			verticalz = 0;
+			break;
+		case 3:
+			posicio_camera_x = 0;
+			posicio_camera_y = -3;
+			posicio_camera_z = 3;
+
+			posicio_apunta_x =0;
+			posicio_apunta_y =0;
+			posicio_apunta_z =0;
+
+			verticaly =1;
+			verticalz = 0;
+			break;
+		case 4:
+			posicio_camera_x = 0;
+			posicio_camera_y = -3;
+			posicio_camera_z = 0;
+
+			posicio_apunta_x =0;
+			posicio_apunta_y =0;
+			posicio_apunta_z =0;
+
+			verticaly =0;
+			verticalz = 1;
+
+			break;
 	}
+}
+
+//Método para processar las teclas
+void ProcessNormalKeys(unsigned char tecla, int x, int y){
+    
+		switch(tecla){
+			case 'w':
+				if(posicio ==3){
+					moure_camera(1);
+				}
+				break;
+			case 's':
+				moure_camera(2);
+					break;
+			case 'd':
+				if(posicio ==3){
+					moure_camera(3);
+				}
+					break;
+			case 'a':
+				if(posicio ==3){
+					moure_camera(4);
+				}
+					break;
+			case 'r':
+					sentit *= -1;
+					break;
+			case 'q':
+					canviar_posicio_camera();
+					posicio++;
+					if(posicio >4){
+						posicio =0;
+					}
+					break;
+			case 'e':
+					if(posicio ==3){
+						{std::thread t1(volta_eixy);
+						t1.join();}
+					}
+					break;
+			case 'f':
+					if(posicio ==3){
+						{std::thread t2(volta_eixx);
+						t2.join();}
+					}
+					break;
+		}	
+	
+	
 	glutPostRedisplay();
 }
+
 
 
 void Display(void)
 {
 
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable (GL_LINE_SMOOTH);
-  glEnable( GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glHint ( GL_LINE_SMOOTH_HINT, GL_NICEST);
+  //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  
   
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, 0.0, 1.0, 0.0);
+  gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, verticalx,verticaly,verticalz);
   
-
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   // 1.25 min per a z
   // 1.5 min per y
   glPushMatrix();
 		glScalef(1.5,1.5,1.5);
 		glBegin(GL_POLYGON);
-			glColor3f(0.0f, 1.0f, 0.0f);
+			glColor4f(0.0f, 1.0f, 0.0f,1.0);
 			glVertex3f(-0.25,-(R1+R2+0.25),-0.25);
-            glColor3f(0.0f, 1.0f, 0.0f);
+            glColor4f(0.0f, 1.0f, 0.0f,1.0);
 			glVertex3f(-0.25,-(R1+R2+0.25),0.25);
-			glColor3f(0.0f, 1.0f, 0.0f);
+			glColor4f(0.0f, 1.0f, 0.0f,1.0);
 			glVertex3f(0.25,-(R1+R2+0.25),0.25);
-			glColor3f(0.0f, 1.0f, 0.0f);
+			glColor4f(0.0f, 1.0f, 0.0f,1.0);
 			glVertex3f(0.25,-(R1+R2+0.25),-0.25);
 		glEnd();
-
 		glLineWidth (2.0);
 		glBegin(GL_LINES);
 			glColor3f(1.0f, 1.0f, 1.0f);
@@ -295,12 +508,7 @@ void Display(void)
 			glVertex3f(0.0f, 0.0f,0.0f);
 			glColor3f(1.0f, 0.0f, 0.0f);
 			glVertex3f((GLfloat)xx1,(GLfloat)yy1,0.0f);	
-		glEnd();
-
-		glLineWidth (1.0);
-		glColor3f(1.0f, 0.0f, 1.0f);
-        glutSolidSphere(0.03f,30.0,30.0);
-		
+		glEnd();	
 
         glTranslatef(xx1,yy1,0.0f);
 
@@ -309,7 +517,6 @@ void Display(void)
 		glutSolidSphere(0.03f,30.0,30.0);
 
 	glPopMatrix();
-
 	glLineWidth (5.0);
 
 	glPushMatrix();
@@ -333,11 +540,15 @@ void Display(void)
 
 	glPopMatrix();
 
+	glLineWidth (1.0);
+	glColor3f(1.0f, 0.0f, 1.0f);
+    glutSolidSphere(0.03f,30.0,30.0);
 
 	glutSwapBuffers();
 	glFlush();
 }
 
+//Método que calcula el angulo de los brazos del péndulo
 void lagrange(void){
 
 	float a = (-(M1+M2) *g*R1 * sin(angle1)) - (M2*R1*R2*pow(angle2dot,2)*sin(angle1-angle2));
@@ -358,6 +569,24 @@ void lagrange(void){
 	glutPostRedisplay();
 }
 
+
+void init(){
+
+	glutReshapeFunc(eventoVentana);
+	glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_EQUAL);
+	glutDisplayFunc(Display);
+	glutIdleFunc(lagrange);
+	glutSpecialFunc(ProcessSpecialKeys);
+	glutKeyboardFunc(ProcessNormalKeys);
+
+    printf(" flecha superior - enfocar la càmera cap a dalt\n");
+    printf(" flecha inferior - enfocar la càmera cap a baix\n");
+    printf("flecha esquerre - enfocar la càmera cap a l'esquerre\n");
+    printf("flecha dreta - enfocar la càmera cap a la dreta\n");
+}
+
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
@@ -365,20 +594,14 @@ int main(int argc, char **argv)
 	// Indicamos como ha de ser la nueva ventana
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(W_WIDTH, W_HEIGHT);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
 
 	glutCreateWindow("Pendulo");
 
-	glutDisplayFunc(Display);
-	glutIdleFunc(lagrange);
-	glutSpecialFunc(ProcessSpecialKeys);
-    glutReshapeFunc(eventoVentana);
-	glutKeyboardFunc(ProcessNormalKeys);
+	init();
 
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	//glOrtho(-1.0, 1.0f, -1.0, 1.0f, -1.0, 1.0f); // minims i màxims x,y i z que veim
-
-    opcionesVisualizacion();
 
 	// Comienza la ejecuci�n del core de GLUT
 	glutMainLoop();

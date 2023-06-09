@@ -1,3 +1,6 @@
+//Escena en el espacio 3D
+//Autores: Pere Joan Vives Morey i Arnau Vidal Moreno
+//Código para ejecutar : g++ part3.cpp -o part3 -lGL -lGLU -lglut
 #include <GL/glut.h>
 #include <stdio.h>
 #include <iostream>
@@ -10,8 +13,9 @@
 #define solido 2
 
 int modo = solido;
-GLfloat angleinici = 20.0f;
-GLfloat angleincrement = 0.0f;
+GLfloat angleinici = 20.0f; //ángulo de inicio de las primitivas
+GLfloat angleincrement = 0.0f; //incremento del angulo de las primitivas
+bool ortho = true; //Elegimos que perspectiva queremos utilizar
 
 /* Funci�n que establece la proyecci�n -------------------------------------*/
 void proyeccion(void)
@@ -19,8 +23,15 @@ void proyeccion(void)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity(); // compara aquí amb ortho i frustrum
-    glFrustum(-1, 1, -1, 1, 1.0, 5.0);
-    //glOrtho (-1.2, 1.2, -1.2, 1.2, -1.2, 5.0);
+    if(!ortho){
+        glFrustum(-1, 1, -1, 1, 1.0, 5.0);
+        printf("Esteim a la perspectiva Frustrum\n");
+    }else{
+        printf("Esteim a la perspectiva Ortho\n");
+        glOrtho (-1.2, 1.2, -1.2, 1.2, -1.2, 5.0);
+    }
+
+    
 }
 
 /* Rutina asociada a eventos de ventana ------------------------------------*/
@@ -41,11 +52,17 @@ void Dibuja()
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0, 0, -2.25, 0, 0, 0, 0, 1, 0);
+    if(!ortho){
+        gluLookAt(0, 0, -2.25, 0, 0, 0, 0, 1, 0);
+    }
     glScalef(0.2, 0.2, 0.2);
 
+    //En este primer pushMatrix pintamos el torso exterior
+    //lo vamos a rotar por el ángulo incremento
     glPushMatrix();
     glRotatef(angleinici + angleincrement, 0.0, 1.0, 0.0);
+    //podremos elegir por teclado el modo de esta primitiva
+    //si queremos ver solo los vértices i aristas vamos a elegir el modo alámbre.
     switch (modo)
     {
     case alambre:
@@ -59,6 +76,7 @@ void Dibuja()
     }
     glPopMatrix();
 
+    //En este pushMatrix vamos a pintar el segundo torso, el más pequeño.
     glPushMatrix();
     glRotatef(angleinici - angleincrement, 0.0, 1.0, 0.0);
     switch (modo)
@@ -74,6 +92,8 @@ void Dibuja()
     }
     glPopMatrix();
 
+    //En este pushMatrix vamos a pintar el círculo interior y el cono
+    //El cono nos va a ser útil para ver la rotación del círculo.
     glPushMatrix();
 
     glRotatef(angleinici + angleincrement, 1.0, 0.0, 0.0);
@@ -125,10 +145,14 @@ void Idle(void)
     // Si es mayor que dos pi la decrementamos
     if ((angleincrement + angleinici) >= 360)
         angleincrement = 0;
+        
     // Indicamos que es necesario repintar la pantalla
     glutPostRedisplay();
 }
 
+//Método que gestiona los eventos de ratón
+//Si pulsamos el click izquierdo, las primitivas van a rotar en una dirección
+//Si pulsamos el click derecho, las primitivas se van a parar.
 void mouse(int button, int state, int x, int y)
 {
     switch (button)
@@ -154,7 +178,7 @@ void opcionesVisualizacion(void)
     glEnable(GL_DEPTH_TEST);
     printf(" z - Al�mbrico\n");
     printf(" x - S�lido \n");
-    printf("click esquerre - moviment\n");
+    printf("click esquerre - arranca moviment\n");
     printf("click dret - atura moviment \n");
 }
 

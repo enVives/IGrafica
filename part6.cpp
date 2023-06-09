@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#define MAX_TEXTURAS       4 /* numero maximo de texturas */
+#define MAX_TEXTURAS       5 /* numero maximo de texturas */
 #define ALTO_TEXTURA_PARED     1280   /* alto de la imagen a texturar */
 #define ANCHO_TEXTURA_PARED    769  /* ancho de la imagen a texturar  */
 
@@ -18,6 +18,9 @@
 
 #define ALTO_TEXTURA_SOSTRE     600  /* alto de la imagen a texturar */
 #define ANCHO_TEXTURA_SOSTRE   600  /* ancho de la imagen a texturar  */
+
+#define ALTO_TEXTURA_MARIE     539  /* alto de la imagen a texturar */
+#define ANCHO_TEXTURA_MARIE  902  /* ancho de la imagen a texturar  */
 
 
 const int W_WIDTH = 500; // Tama�o incial de la ventana
@@ -44,6 +47,7 @@ int sentit = 1;
 GLubyte textura_pared[ALTO_TEXTURA_PARED][ANCHO_TEXTURA_PARED][3]; /* vector de texturas */
 GLubyte textura_enterra[ALTO_TEXTURA_SUELO][ANCHO_TEXTURA_SUELO][3]; /* vector de texturas */
 GLubyte textura_sostre[ALTO_TEXTURA_SOSTRE][ANCHO_TEXTURA_SOSTRE][3]; /* vector de texturas */
+GLubyte textura_marie[ALTO_TEXTURA_MARIE][ANCHO_TEXTURA_MARIE][3]; /* vector de texturas */
 GLuint nombreTexturas[MAX_TEXTURAS];
 
 static GLfloat paretsdata [24][3] = {{-1,0,0},{-1,1,0},{1,1,0},{1,0,0},
@@ -101,19 +105,13 @@ void crearParedes(){
         
         glBegin(GL_POLYGON);
 
-        
-
         glTexCoord2f(0.0,0.0);
-        glNormal3f(0.0,1.0,0.0);
         glVertex3f(-1.0, 0.0, 0.0);
         glTexCoord2f(0.0,1.0);
-        glNormal3f(0.0,1.0,0.0);
         glVertex3f(-1.0, 0.0,-5.0);
         glTexCoord2f(1.0,1.0);
-        glNormal3f(0.0,1.0,0.0);
         glVertex3f(1.0, 0.0, -5.0);
         glTexCoord2f(1.0,0.0);
-        glNormal3f(0.0,1.0,0.0);
         glVertex3f(1.0, 0.0,0.0);
         glEnd();
 
@@ -141,6 +139,8 @@ void crearParedes(){
 
 void pintarSostre(){
     glBindTexture(GL_TEXTURE_2D, nombreTexturas[2]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+
     glPushMatrix();
         glBegin(GL_POLYGON);
             glTexCoord2f(0.0,0.0);
@@ -159,23 +159,166 @@ void pintarSostre(){
     glPopMatrix();
 }
 
+void pintarColumna(){
+
+    glBindTexture(GL_TEXTURE_2D, nombreTexturas[2]);
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+
+    glPushMatrix();
+        glTranslatef(0,0,-2.5);
+        glRotatef(-90.0,1,0,0);
+        glutSolidCone(0.1,0.3,30,30);
+    glPopMatrix();
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_2D);
+
+    glPushMatrix();
+        glBegin(GL_POLYGON);
+            glColor3f(0.4,0.4,0.4);
+            glVertex3f(-0.2,0.3,-2.3);
+            glColor3f(0.4,0.4,0.4);
+            glVertex3f(0.2,0.3,-2.3);
+            glColor3f(0.4,0.4,0.4);
+            glVertex3f(0.2,0.3,-2.7);
+            glColor3f(0.4,0.4,0.4);
+            glVertex3f(-0.2,0.3,-2.7);
+        glEnd();
+    glPopMatrix();
+}
 
 
+void pintarAlfombra(){
+    glDisable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glBegin(GL_POLYGON);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(-0.25,0,0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(-0.25,0,-5);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(0.25,0,-5);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(0.25,0,0);
+        glEnd();
+    glPopMatrix();
+    glPushMatrix();
+        glBegin(GL_POLYGON);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(-1,0,-2.25);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(-1,0,-2.75);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(1,0,-2.75);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(1,0,-2.25);
+        glEnd();
+    glPopMatrix();
+    glEnable(GL_TEXTURE_2D);
+}
+
+void pintarQuadre(){
+    glDisable(GL_TEXTURE_2D);
+    glPushMatrix();
+        glTranslatef(0,0,-5);
+        
+        glBegin(GL_POLYGON);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.25,0.25,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.25,0.25,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.25,0.3,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.25,0.3,0);
+        glEnd();
+        glBegin(GL_POLYGON);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.25,0.3,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.20,0.3,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.20,0.7,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.25,0.7,0);
+        glEnd();
+        glBegin(GL_POLYGON);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.25,0.7,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.25,0.7,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.25,0.75,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(-0.25,0.75,0);
+        glEnd();
+        glBegin(GL_POLYGON);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.25,0.3,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.20,0.3,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.20,0.7,0);
+            glColor3f(0.4,0.2,0.1);
+            glVertex3f(0.25,0.7,0);
+        glEnd();
+
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, nombreTexturas[3]);
+
+        glBegin(GL_POLYGON);
+            glTexCoord2f(0.0,0.0);
+            glVertex3f(0.20,0.3,0);
+            glTexCoord2f(0.0,1.0);
+            glVertex3f(0.20,0.7,0);
+            glTexCoord2f(1,1);
+            glVertex3f(-0.20,0.7,0);
+            glTexCoord2f(1,0.0);
+            glVertex3f(-0.20,0.3,0);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+}
+
+void pintarLlum(){
+    glPushMatrix();
+        glBegin(GL_POLYGON);
+            glColor3f(1,1,1);
+            glVertex3f(-0.25,1,-2.25);
+            glColor3f(1,1,1);
+            glVertex3f(-0.25,1,-2.75);
+            glColor3f(1,1,1);
+            glVertex3f(0.25,1,-2.75);
+            glColor3f(1,1,1);
+            glVertex3f(0.25,1,-2.25);
+        glEnd();
+    glPopMatrix();
+    glEnable(GL_TEXTURE_2D);
+}
 void Display(void){
 
     glClearColor(0.0,0.0,0.0,0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  
+    glEnable(GL_DEPTH_TEST);
+    glShadeModel(GL_SMOOTH);
+    glDepthFunc   (GL_LEQUAL);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, 0.0, 1.0, 0.0);
 
+    
     glEnable(GL_TEXTURE_2D);
 
     crearParedes();
     pintarSostre();
-    glDisable(GL_TEXTURE_2D);
+    pintarQuadre();
+    pintarLlum();
+    
+    pintarAlfombra();
+    pintarColumna();
 
     glPushMatrix();
     glTranslatef(posicio_apunta_x,posicio_apunta_y,posicio_apunta_z);
@@ -218,6 +361,9 @@ void leeTextura (char *fichero, int torn) {
         }else if(torn ==2){
             alto_textura = ALTO_TEXTURA_SOSTRE;
             ancho_textura = ANCHO_TEXTURA_SOSTRE;
+        }else if(torn ==3){
+            alto_textura = ALTO_TEXTURA_MARIE;
+            ancho_textura = ANCHO_TEXTURA_MARIE;
         }
         /* Lee la imagen */
         for (j=alto_textura-1; j>=0; j--) {
@@ -235,6 +381,10 @@ void leeTextura (char *fichero, int torn) {
                  textura_sostre[j][i][0] = (GLubyte)r;
                  textura_sostre[j][i][1] = (GLubyte)g;
                  textura_sostre[j][i][2] = (GLubyte)b; 
+                }else if(torn ==3){
+                 textura_marie[j][i][0] = (GLubyte)r;
+                 textura_marie[j][i][1] = (GLubyte)g;
+                 textura_marie[j][i][2] = (GLubyte)b; 
                 }
                 
             }
@@ -254,8 +404,13 @@ void material (void) {
   leeTextura(nom1,1);
   char nom2 [] = "sostre.tga";
   leeTextura(nom2,2);
+  char nom3 [] = "marie.tga";
+  leeTextura(nom3,3);
   /* Definici�n de los par�metros iniciales de texturacion */ 
   glBindTexture(GL_TEXTURE_2D, nombreTexturas[0]); 
+  
+  GLfloat tparams[]={0,1.4,0,0.5};
+  GLfloat sparams[]={1,0.0,0.0,0.5};
 
   
   glTexImage2D(GL_TEXTURE_2D, 0, 3, 1280, 769, 
@@ -283,18 +438,23 @@ void material (void) {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+  glBindTexture(GL_TEXTURE_2D, nombreTexturas[3]);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, ANCHO_TEXTURA_MARIE, ALTO_TEXTURA_MARIE, 
+	       0, GL_RGB, GL_UNSIGNED_BYTE, textura_marie);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+  glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+  glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+  glTexGenfv(GL_S, GL_OBJECT_PLANE, sparams);
+  glTexGenfv(GL_T, GL_OBJECT_PLANE, tparams);
+
 }
 
-void llum(void){
-
-    glEnable (GL_LINE_SMOOTH);
-    glEnable( GL_BLEND);
-    glEnable(GL_NORMALIZE);
-    
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glHint ( GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glShadeModel(GL_SMOOTH);
-}
 
 void gira_vista_y(float angle){
     float vista_x = posicio_apunta_x;
@@ -489,16 +649,15 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
 
 void opcionesVisualizacion(void)
 {
-    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-    glShadeModel  (GL_SMOOTH);
-    glDepthFunc   (GL_LEQUAL);
-    glEnable      (GL_DEPTH_TEST); //ZBuffer
-    glEnable      (GL_NORMALIZE);
 
     printf(" flecha superior - enfocar la càmera cap a dalt\n");
     printf(" flecha inferior - enfocar la càmera cap a baix\n");
     printf("flecha esquerre - enfocar la càmera cap a l'esquerre\n");
     printf("flecha dreta - enfocar la càmera cap a la dreta\n");
+
+}
+
+void llum(void){
 
 }
 
@@ -510,7 +669,7 @@ int main(int argc, char **argv)
 	// Indicamos como ha de ser la nueva ventana
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(W_WIDTH, W_HEIGHT);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
 
 	glutCreateWindow("Part6");
 
@@ -527,7 +686,7 @@ int main(int argc, char **argv)
 
     opcionesVisualizacion();
     material();
-    //llum();
+    llum();
 
 	// Comienza la ejecuci�n del core de GLUT
 	glutMainLoop();

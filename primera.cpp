@@ -51,6 +51,17 @@ void Display (void)
 			glColor3f (0.0f, 0.0f, 1.0f);
 			glVertex3f(-0.5f, -0.866f, 0.0f);
 		glEnd();
+
+		glBegin(GL_POLYGON);
+			glColor3f (0.4,0.2,0);
+			glVertex3f(0.20f, 0.20f, 0.0f);
+			glColor3f (0.4,0.2,0);
+			glVertex3f(-0.20f, 0.20f, 0.0f);
+			glColor3f (0.4,0.2,0);
+			glVertex3f(-0.20f, -0.20f, 0.0f);
+			glColor3f (0.4,0.2,0);
+			glVertex3f(0.20f, -0.20f, 0.0f);
+		glEnd();
 	glPopMatrix();
 	glutSwapBuffers();
 	glFlush();
@@ -73,23 +84,25 @@ void Idle (void)
 
 void mouse(int button, int state, int x, int y){
     switch(button){
-        case GLUT_LEFT_BUTTON:
+        case GLUT_MIDDLE_BUTTON:
             if(state == GLUT_DOWN)
                 glutIdleFunc(Idle);
             break;
         case GLUT_RIGHT_BUTTON:
-            if(state == GLUT_DOWN)
-                //glutIdleFunc(NULL);
+            if(state == GLUT_DOWN){
+				distancia = distancia-0.25;
+			}
+                
             break;
-		case GLUT_MIDDLE_BUTTON:
+		case GLUT_LEFT_BUTTON:
 				if(state == GLUT_DOWN){
 					distancia = distancia+0.25;
-					glutPostRedisplay();
 				}
 			break;
         default:
             break;
     }
+	glutPostRedisplay();
 
 }
 
@@ -133,7 +146,6 @@ int main(int argc, char **argv)
 	glutDisplayFunc(Display);
 	glutReshapeFunc(Reproyectar);
 	glutMouseFunc(mouse);
-	//glutIdleFunc(Idle);
 
 	// El color de fondo ser� el negro (RGBA, RGB + Alpha channel)
 	glClearColor (1.0f, 1.0f, 1.0f, 1.0f); 
