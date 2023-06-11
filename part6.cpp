@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#define MAX_TEXTURAS       5 /* numero maximo de texturas */
+#define MAX_TEXTURAS       6 /* numero maximo de texturas */
 #define ALTO_TEXTURA_PARED     1280   /* alto de la imagen a texturar */
 #define ANCHO_TEXTURA_PARED    769  /* ancho de la imagen a texturar  */
 
@@ -21,6 +21,9 @@
 
 #define ALTO_TEXTURA_MARIE     539  /* alto de la imagen a texturar */
 #define ANCHO_TEXTURA_MARIE  902  /* ancho de la imagen a texturar  */
+
+#define ALTO_TEXTURA_METAL     178  /* alto de la imagen a texturar */
+#define ANCHO_TEXTURA_METAL  283  /* ancho de la imagen a texturar  */
 
 
 const int W_WIDTH = 500; // Tama�o incial de la ventana
@@ -44,10 +47,22 @@ float anglexy = 0.0;
 int direccio =1;
 int sentit = 1;
 
+//Per els llums
+
+float angle1_llum = 0.0f;
+float angle2_llum = 0.0f;
+
+float altura_llums= 0.5f;
+
+bool ences_esquerre = true;
+bool ences_dreta = true;
+
+
 GLubyte textura_pared[ALTO_TEXTURA_PARED][ANCHO_TEXTURA_PARED][3]; /* vector de texturas */
 GLubyte textura_enterra[ALTO_TEXTURA_SUELO][ANCHO_TEXTURA_SUELO][3]; /* vector de texturas */
 GLubyte textura_sostre[ALTO_TEXTURA_SOSTRE][ANCHO_TEXTURA_SOSTRE][3]; /* vector de texturas */
 GLubyte textura_marie[ALTO_TEXTURA_MARIE][ANCHO_TEXTURA_MARIE][3]; /* vector de texturas */
+GLubyte textura_metal[ALTO_TEXTURA_METAL][ANCHO_TEXTURA_METAL][3]; /* vector de texturas */
 GLuint nombreTexturas[MAX_TEXTURAS];
 
 static GLfloat paretsdata [24][3] = {{-1,0,0},{-1,1,0},{1,1,0},{1,0,0},
@@ -60,16 +75,80 @@ static GLuint paretsindexs[12][4] = {{0,1,2,3},{2,3,4,5},{4,5,6,7},{6,7,8,9},
     {8,9,10,11},{10,11,12,13},{12,13,14,15},{14,15,16,17},{16,17,18,19},
     {18,19,20,21},{20,21,22,23},{22,23,0,1}};
 
-static GLfloat normaleParets[24][3] = {{1,0,0},{1,-1,0},{-1,-1,0},{-1,0,0},
-    {-1,0,1},{-1,-1,1},{-1,-1,2},{-1,0,2},{-1,0,3},{-1,-1,3},{-1,-1,4},{-1,0,4},
-    {-1,0,5},{-1,-1,5},{1,-1,5},{1,0,5},{1,0,4},{1,-1,4},{1,-1,3},{1,0,3},
-    {1,0,2},{1,-1,2},{1,-1,1},{1,0,1}
+static GLfloat normaleParets[24][3] = {{1,0,-1},{1,0,-1},{-1,0,-1},{-1,0,-1},
+    {-1,0,0},{-1,0,0},{-1,0,0},{-1,0,0},{-1,0,0},{-1,0,0},{-1,0,0},{-1,0,0},
+    {-1,0,1},{-1,0,1},{1,0,1},{1,0,1},{1,0,0},{1,0,0},{1,0,0},{1,0,0},
+    {1,0,0},{1,0,0},{1,0,0},{1,0,0}
     };
+
+static GLfloat sostredata[33][3] = {{-1,1,0},{0,1,0},{0,1,-0.5},{-1,1,-0.5},
+    {1,1,0},{1,1,-0.5},{-1,1,-1},{0,1,-1},{1,1,-1},{-1,1,-1.5},{0,1,-1.5},{1,1,-1.5},
+    {-1,1,-2},{0,1,-2},{1,1,-2},{-1,1,-2.5},{0,1,-2.5},{1,1,-2.5},{-1,1,-3},{0,1,-3},
+    {1,1,-3},{-1,1,-3.5},{0,1,-3.5},{1,1,-3.5},{-1,1,-4},{0,1,-4},{1,1,-4},{-1,1,-4.5},
+    {0,1,-4.5},{1,1,-4.5},{-1,1,-5},{0,1,-5},{1,1,-5}
+
+};
+
+static GLuint sostreindexs[20][4] = {{0,1,2,3},{3,2,7,6},{6,7,10,9},{9,10,13,12},{12,13,16,15},{15,16,19,18},
+    {18,19,22,21},{21,22,25,24},{24,25,28,27},{27,28,31,30},{1,4,5,2},{2,5,8,7},{7,8,11,10},{10,11,14,13},{13,14,17,16},
+    {16,17,20,19},{19,20,23,22},{22,23,26,25},{25,26,29,28},{28,29,32,31}
+};
+
 GLUquadricObj *objCylinder = gluNewQuadric();
 
+void drawCylinder(float radius, float height, int numSegments) {
+    float segmentHeight = height / numSegments;
+    float segmentAngle = 2.0f * M_PI / numSegments;
 
+    for (int i = 0; i < numSegments; i++) {
+        float angle1 = i * segmentAngle;
+        float x1 = radius * cos(angle1);
+        float z1 = radius * sin(angle1);
+        float y1 = -height / 2.0f;
+
+        float angle2 = (i + 1) * segmentAngle;
+        float x2 = radius * cos(angle2);
+        float z2 = radius * sin(angle2);
+        float y2 = height / 2.0f;
+
+        // Draw top face
+        glBegin(GL_TRIANGLES);
+        glColor3f(0.0,0.0,0.0);
+        glTexCoord2f(0.0,0.0);
+        glVertex3f(0.0f, y2, 0.0f);
+        glTexCoord2f(0.0,1.0);
+        glVertex3f(x1, y2, z1);
+        glTexCoord2f(1.0,0.0);
+        glVertex3f(x2, y2, z2);
+        glEnd();
+
+        // Draw bottom face
+        glBegin(GL_TRIANGLES);
+        glColor3f(0.0,0.0,0.0);
+        glTexCoord2f(0.0,0.0);
+        glVertex3f(0.0f, y1, 0.0f);
+        glTexCoord2f(0.0,1.0);
+        glVertex3f(x2, y1, z2);
+        glTexCoord2f(1.0,0.0);
+        glVertex3f(x1, y1, z1);
+        glEnd();
+
+        // Draw side face
+        glBegin(GL_QUADS);
+        glColor3f(0.0,0.0,0.0);
+        glTexCoord2f(0.0,0.0);
+        glVertex3f(x1, y1, z1);
+        glTexCoord2f(0.0,1.0);
+        glVertex3f(x2, y1, z2);
+        glTexCoord2f(1.0,1.0);
+        glVertex3f(x2, y2, z2);
+        glTexCoord2f(1.0,0.0);
+        glVertex3f(x1, y2, z1);
+        glEnd();
+    }
+}
 void crearParedes(){
-
+        glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, nombreTexturas[0]);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glPushMatrix();
@@ -97,20 +176,25 @@ void crearParedes(){
             glEnd();
         }
         glPopMatrix();
-        
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+        glDisable(GL_TEXTURE_2D);
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glBindTexture(GL_TEXTURE_2D, nombreTexturas[1]);
 
         glPushMatrix();
         
         glBegin(GL_POLYGON);
 
+        glNormal3f(0,1,0);
         glTexCoord2f(0.0,0.0);
         glVertex3f(-1.0, 0.0, 0.0);
+        glNormal3f(0,1,0);
         glTexCoord2f(0.0,1.0);
         glVertex3f(-1.0, 0.0,-5.0);
+        glNormal3f(0,1,0);
         glTexCoord2f(1.0,1.0);
         glVertex3f(1.0, 0.0, -5.0);
+        glNormal3f(0,1,0);
         glTexCoord2f(1.0,0.0);
         glVertex3f(1.0, 0.0,0.0);
         glEnd();
@@ -139,29 +223,36 @@ void crearParedes(){
 
 void pintarSostre(){
     glBindTexture(GL_TEXTURE_2D, nombreTexturas[2]);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
     glPushMatrix();
+        for(int i=0;i<20;i++){
         glBegin(GL_POLYGON);
-            glTexCoord2f(0.0,0.0);
-            glNormal3f(0.0,-1.0,0.0);
-            glVertex3f(-1.0, 1.0, 0.0);
-            glTexCoord2f(0.0,1.0);
-            glNormal3f(0.0,-1.0,0.0);
-            glVertex3f(-1.0, 1.0,-5.0);
-            glTexCoord2f(1.0,1.0);
-            glNormal3f(0.0,-1.0,0.0);
-            glVertex3f(1.0, 1.0, -5.0);
-            glTexCoord2f(1.0,0.0);
-            glNormal3f(0.0,-1.0,0.0);
-            glVertex3f(1.0, 1.0,0.0);
+            glColor3f(0.7,0.7,0.7);
+                    glTexCoord2f(0.0,0.0);
+                    glNormal3f(0,-1,0);
+                    glVertex3fv(&sostredata[sostreindexs[i][0]][0]);
+
+                    glTexCoord2f(0.0,1.0);
+                    glNormal3f(0,-1,0);
+                    glVertex3fv(&sostredata[sostreindexs[i][1]][0]);
+
+                    glTexCoord2f(1.0,1.0);
+                    glNormal3f(0,-1,0);
+                    glVertex3fv(&sostredata[sostreindexs[i][2]][0]);
+
+                    glTexCoord2f(1.0,0.0);
+                    glNormal3f(0,-1,0);
+                    glVertex3fv(&sostredata[sostreindexs[i][3]][0]);
         glEnd();
+        }
     glPopMatrix();
 }
 
 void pintarColumna(){
-
+    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, nombreTexturas[2]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
 
@@ -176,12 +267,16 @@ void pintarColumna(){
 
     glPushMatrix();
         glBegin(GL_POLYGON);
+            glNormal3f(0,1,0);
             glColor3f(0.4,0.4,0.4);
             glVertex3f(-0.2,0.3,-2.3);
+            glNormal3f(0,1,0);
             glColor3f(0.4,0.4,0.4);
             glVertex3f(0.2,0.3,-2.3);
+            glNormal3f(0,1,0);
             glColor3f(0.4,0.4,0.4);
             glVertex3f(0.2,0.3,-2.7);
+            glNormal3f(0,1,0);
             glColor3f(0.4,0.4,0.4);
             glVertex3f(-0.2,0.3,-2.7);
         glEnd();
@@ -190,134 +285,473 @@ void pintarColumna(){
 
 
 void pintarAlfombra(){
-    glDisable(GL_TEXTURE_2D);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, nombreTexturas[4]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+
     glPushMatrix();
         glBegin(GL_POLYGON);
+            glTexCoord2f(0.0,0.0);
             glColor3f(0.6,0.3,0.3);
             glVertex3f(-0.25,0,0);
+            glTexCoord2f(0.0,1.0);
             glColor3f(0.6,0.3,0.3);
-            glVertex3f(-0.25,0,-5);
+            glVertex3f(-0.25,0,-2.5);
+            glTexCoord2f(1.0,1.0);
             glColor3f(0.6,0.3,0.3);
-            glVertex3f(0.25,0,-5);
+            glVertex3f(0.25,0,-2.5);
+            glTexCoord2f(1.0,0.0);
             glColor3f(0.6,0.3,0.3);
             glVertex3f(0.25,0,0);
         glEnd();
+        glBegin(GL_POLYGON);
+            glTexCoord2f(0.0,0.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(-0.25,0,-2.5);
+            glTexCoord2f(0.0,1.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(-0.25,0,-5);
+            glTexCoord2f(1.0,1.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(0.25,0,-5);
+            glTexCoord2f(1.0,0.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(0.25,0,-2.5);
+        glEnd();
     glPopMatrix();
     glPushMatrix();
         glBegin(GL_POLYGON);
+            glTexCoord2f(0.0,0.0);
             glColor3f(0.6,0.3,0.3);
             glVertex3f(-1,0,-2.25);
+            glTexCoord2f(0.0,1.0);
             glColor3f(0.6,0.3,0.3);
             glVertex3f(-1,0,-2.75);
+            glTexCoord2f(1.0,1.0);
             glColor3f(0.6,0.3,0.3);
-            glVertex3f(1,0,-2.75);
+            glVertex3f(0,0,-2.75);
+            glTexCoord2f(1.0,0.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(0,0,-2.25);
+        glEnd();
+        glBegin(GL_POLYGON);
+            glTexCoord2f(0.0,0.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(0,0,-2.25);
+            glTexCoord2f(0.0,1.0);
             glColor3f(0.6,0.3,0.3);
             glVertex3f(1,0,-2.25);
+            glTexCoord2f(1.0,1.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(1,0,-2.75);
+            glTexCoord2f(1.0,0.0);
+            glColor3f(0.6,0.3,0.3);
+            glVertex3f(0,0,-2.75);
         glEnd();
     glPopMatrix();
-    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D);
 }
 
 void pintarQuadre(){
-    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, nombreTexturas[1]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+
     glPushMatrix();
         glTranslatef(0,0,-5);
         
         glBegin(GL_POLYGON);
+            glTexCoord2f(0.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.25,0.25,0);
+            glNormal3f(0,0,1);
+            glVertex3f(-0.5,0.25,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(0.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.25,0.25,0);
+            glVertex3f(0.5,0.25,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.25,0.3,0);
+            glVertex3f(0.5,0.3,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.25,0.3,0);
+            glVertex3f(-0.5,0.3,0);
         glEnd();
         glBegin(GL_POLYGON);
+            glNormal3f(0,0,1);
+            glTexCoord2f(0.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.25,0.3,0);
+            glVertex3f(-0.5,0.3,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(0.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.20,0.3,0);
+            glVertex3f(-0.45,0.3,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.20,0.7,0);
+            glVertex3f(-0.45,0.7,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.25,0.7,0);
+            glVertex3f(-0.5,0.7,0);
         glEnd();
         glBegin(GL_POLYGON);
+            glNormal3f(0,0,1);
+            glTexCoord2f(0.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.25,0.7,0);
+            glVertex3f(-0.5,0.7,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(0.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.25,0.7,0);
+            glVertex3f(0.5,0.7,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.25,0.75,0);
+            glVertex3f(0.5,0.75,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(-0.25,0.75,0);
+            glVertex3f(-0.5,0.75,0);
         glEnd();
         glBegin(GL_POLYGON);
+            glNormal3f(0,0,1);
+            glTexCoord2f(0.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.25,0.3,0);
+            glVertex3f(0.5,0.3,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(0.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.20,0.3,0);
+            glVertex3f(0.45,0.3,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,1.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.20,0.7,0);
+            glVertex3f(0.45,0.7,0);
+            glNormal3f(0,0,1);
+            glTexCoord2f(1.0,0.0);
             glColor3f(0.4,0.2,0.1);
-            glVertex3f(0.25,0.7,0);
+            glVertex3f(0.5,0.7,0);
         glEnd();
 
+        glDisable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, nombreTexturas[3]);
 
         glBegin(GL_POLYGON);
+            glNormal3f(0,0,1);
             glTexCoord2f(0.0,0.0);
-            glVertex3f(0.20,0.3,0);
+            glVertex3f(0.45,0.3,0);
+            glNormal3f(0,0,1);
             glTexCoord2f(0.0,1.0);
-            glVertex3f(0.20,0.7,0);
+            glVertex3f(0.45,0.7,0);
+            glNormal3f(0,0,1);
             glTexCoord2f(1,1);
-            glVertex3f(-0.20,0.7,0);
+            glVertex3f(-0.45,0.7,0);
+            glNormal3f(0,0,1);
             glTexCoord2f(1,0.0);
-            glVertex3f(-0.20,0.3,0);
+            glVertex3f(-0.45,0.3,0);
         glEnd();
         glDisable(GL_TEXTURE_2D);
     glPopMatrix();
 }
 
 void pintarLlum(){
+    //Braç 1
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, nombreTexturas[4]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+
     glPushMatrix();
+        glTranslatef(-0.1,0.875,-2.5);
+        glTranslatef(0,0.125,0);
+        glRotatef(-angle1_llum,0,0,1);
+        glTranslatef(0,-0.125,0);
+
         glBegin(GL_POLYGON);
-            glColor3f(1,1,1);
-            glVertex3f(-0.25,1,-2.25);
-            glColor3f(1,1,1);
-            glVertex3f(-0.25,1,-2.75);
-            glColor3f(1,1,1);
-            glVertex3f(0.25,1,-2.75);
-            glColor3f(1,1,1);
-            glVertex3f(0.25,1,-2.25);
+            drawCylinder(0.01,0.25,30);
         glEnd();
     glPopMatrix();
+    //Braç 2
+    glPushMatrix();
+        glTranslatef(0.1,0.875,-2.5);
+        glTranslatef(0,0.125,0);
+        glRotatef(angle1_llum,0,0,1);
+        glTranslatef(0,-0.125,0);
+
+        glBegin(GL_POLYGON);
+            drawCylinder(0.01,0.25,30);
+        glEnd();
+    glPopMatrix();
+    //Braç 3
+    glPushMatrix();
+        glTranslatef(-0.1,0.625,-2.5);
+        glTranslatef(0,0.375,0);
+        glRotatef(-angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(angle2_llum+angle1_llum,0,0,1);
+        glTranslatef(0,-0.125,0);
+        glBegin(GL_POLYGON);
+            drawCylinder(0.01,0.25,30);
+        glEnd();
+    glPopMatrix();
+    //Braç 4
+    glPushMatrix();
+        glTranslatef(0.1,0.625,-2.5);
+
+        glTranslatef(0,0.375,0);
+        glRotatef(angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(-angle2_llum-angle1_llum,0,0,1);
+        glTranslatef(0,-0.125,0);
+        glBegin(GL_POLYGON);
+            drawCylinder(0.01,0.25,30);
+        glEnd();
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
+
+    //Bolla 2 braç 1
+    glPushMatrix();
+        glTranslatef(-0.1,0.75,-2.5);
+        glTranslatef(0.0,0.25,0);
+        glRotatef(-angle1_llum,0,0,1);
+        glTranslatef(0.0,-0.25,0);
+
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidSphere(0.01,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //Bolla 2 braç 2
+    glPushMatrix();
+        glTranslatef(0.1,0.75,-2.5);
+        glTranslatef(0.0,0.25,0);
+        glRotatef(angle1_llum,0,0,1);
+        glTranslatef(0.0,-0.25,0);
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidSphere(0.01,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //Bolla 1 braç 1
+    glPushMatrix();
+        glTranslatef(-0.1,1,-2.5);
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidSphere(0.01,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //Bolla 1 braç 2
+    glPushMatrix();
+        glTranslatef(0.1,1,-2.5);
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidSphere(0.01,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //bombilla esquerre
+    glPushMatrix();
+    glTranslatef(-0.1,0.48,-2.5);
+        glTranslatef(0,0.5,0);
+        glRotatef(-angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(angle2_llum+angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(-90.0,1,0,0);
+        glBegin(GL_POLYGON);
+            if(ences_esquerre){
+                glColor3f(1.0,1.0,1.0);
+            }else{
+                glColor3f(0.0,0.0,0.0);
+            }
+            glutSolidSphere(0.015,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //bombilla dreta
+    glPushMatrix();
+    glTranslatef(0.1,0.48,-2.5);
+        glTranslatef(0,0.5,0);
+        glRotatef(angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(-angle2_llum-angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(-90.0,1,0,0);
+        glBegin(GL_POLYGON);
+            if(ences_dreta){
+                glColor3f(1.0,1.0,1.0);
+            }else{
+                glColor3f(0.0,0.0,0.0);
+            }
+            glutSolidSphere(0.015,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //cono de llum esquerre
     glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, nombreTexturas[4]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+
+    glPushMatrix();
+        glTranslatef(-0.1,0.48,-2.5);
+
+        
+        glTranslatef(0,0.5,0);
+        glRotatef(angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(-angle2_llum-angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(angle2_llum,0,0,1);
+
+        glRotatef(-90.0,1,0,0);
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidCone(0.025,0.03,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //cono de llum dret
+    glPushMatrix();
+        glTranslatef(0.1,0.48,-2.5);
+
+        glTranslatef(0,0.5,0);
+        glRotatef(-angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(angle2_llum+angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(-angle2_llum,0,0,1);
+        glRotatef(-90.0,1,0,0);
+
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidCone(0.025,0.03,30,30);
+        glEnd();
+    glPopMatrix();
+
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_2D);
+
+    //Bolla braç 3
+    glPushMatrix();
+        glTranslatef(-0.1,0.5,-2.5);
+        glTranslatef(0,0.5,0);
+        glRotatef(-angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(angle2_llum+angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidSphere(0.01,30,30);
+        glEnd();
+    glPopMatrix();
+
+    //Bolla braç 4
+    glPushMatrix();
+        glTranslatef(0.1,0.5,-2.5);
+        glTranslatef(0,0.5,0);
+        glRotatef(angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glRotatef(-angle2_llum-angle1_llum,0,0,1);
+        glTranslatef(0,-0.25,0);
+        glBegin(GL_POLYGON);
+            glColor3f(0.0,0.0,0.0);
+            glutSolidSphere(0.01,30,30);
+        glEnd();
+    glPopMatrix();
 }
-void Display(void){
 
-    glClearColor(0.0,0.0,0.0,0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+void init(void){
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_SMOOTH);
     glDepthFunc   (GL_LEQUAL);
+    glEnable(GL_NORMALIZE);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //fins aquí va bé
+
+    glEnable(GL_LIGHTING);{
+        GLfloat light_ambient[]   = { 0.05f, 0.0f, 0.0f, 1.0f };
+        GLfloat light_diffuse[]   = { 0.5f, 0.6f, 0.7f, 1.0f };
+        GLfloat light_specular[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
+        GLfloat light_position_esquerre[]  = { -0.1f, altura_llums, -2.5f, 1.0f };
+        GLfloat light_position_dreta[]  = { 0.1f, altura_llums, -2.5f, 1.0f };
+        GLfloat light_direction[] = { 0.0f,-0.25f,0};
+        GLfloat light_cutoff = 100.0f;
+        
+        glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position_esquerre);
+        glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, light_direction);
+        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, light_cutoff);
+        glLightf(GL_LIGHT0,GL_CONSTANT_ATTENUATION,1.0);
+        glLightf(GL_LIGHT0,GL_LINEAR_ATTENUATION,0.5);
+        glLightf(GL_LIGHT0,GL_QUADRATIC_ATTENUATION,0.2);
+        printf("Altura llums : %f\n",altura_llums);
+
+
+
+        glLightfv(GL_LIGHT1, GL_AMBIENT,  light_ambient);
+        glLightfv(GL_LIGHT1, GL_DIFFUSE,  light_diffuse);
+        glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular);
+        glLightfv(GL_LIGHT1, GL_POSITION, light_position_dreta);
+        glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, light_direction);
+        glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, light_cutoff);
+        glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION,1.0);
+        glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION,0.5);
+        glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,0.2);
+
+        //GLfloat mat_ambient[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //GLfloat mat_diffuse[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //GLfloat mat_specular[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
+        GLfloat mat_shininess[] = { 100.0 };
+
+        GLfloat mat_specular[] = {1.0, 0.901, 0.792, 1.0};
+        GLfloat mat_diffuse[] = {1.0, 0.901, 0.792, 1.0};
+        GLfloat mat_ambient[] = {1.0, 0.901, 0.792, 1.0};
+        GLfloat mat_emission[] = {0.3,0.3,0.2,0.0};
+
+        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+        glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission);
+
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHT1);
+    }
+}
+
+void Display(void){
+
+    glClearColor(0.0,0.0,0.0,0.0);
+    init();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, 0.0, 1.0, 0.0);
 
-    
+
+
     glEnable(GL_TEXTURE_2D);
 
     crearParedes();
     pintarSostre();
     pintarQuadre();
+    glDisable(GL_LIGHTING);
     pintarLlum();
+    glEnable(GL_LIGHTING);
     
-    pintarAlfombra();
+    //pintarAlfombra();
     pintarColumna();
 
     glPushMatrix();
@@ -337,6 +771,8 @@ void eventoVentana(GLsizei ancho, GLsizei alto)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity(); // compara aquí amb ortho i frustrum
 	gluPerspective(45.0f,(GLdouble) ancho/alto , 0.0, 10.0);
+
+    //actualitzar la posició de les llums aquí
 }
 
 void leeTextura (char *fichero, int torn) {
@@ -364,6 +800,9 @@ void leeTextura (char *fichero, int torn) {
         }else if(torn ==3){
             alto_textura = ALTO_TEXTURA_MARIE;
             ancho_textura = ANCHO_TEXTURA_MARIE;
+        }else if(torn ==4){
+            alto_textura = ALTO_TEXTURA_METAL;
+            ancho_textura = ANCHO_TEXTURA_METAL;
         }
         /* Lee la imagen */
         for (j=alto_textura-1; j>=0; j--) {
@@ -385,6 +824,10 @@ void leeTextura (char *fichero, int torn) {
                  textura_marie[j][i][0] = (GLubyte)r;
                  textura_marie[j][i][1] = (GLubyte)g;
                  textura_marie[j][i][2] = (GLubyte)b; 
+                }else if(torn ==4){
+                 textura_metal[j][i][0] = (GLubyte)r;
+                 textura_metal[j][i][1] = (GLubyte)g;
+                 textura_metal[j][i][2] = (GLubyte)b;
                 }
                 
             }
@@ -406,6 +849,8 @@ void material (void) {
   leeTextura(nom2,2);
   char nom3 [] = "marie.tga";
   leeTextura(nom3,3);
+  char nom4 [] = "metal.tga";
+  leeTextura(nom4,4);
   /* Definici�n de los par�metros iniciales de texturacion */ 
   glBindTexture(GL_TEXTURE_2D, nombreTexturas[0]); 
   
@@ -442,6 +887,15 @@ void material (void) {
   
   glTexImage2D(GL_TEXTURE_2D, 0, 3, ANCHO_TEXTURA_MARIE, ALTO_TEXTURA_MARIE, 
 	       0, GL_RGB, GL_UNSIGNED_BYTE, textura_marie);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  glBindTexture(GL_TEXTURE_2D, nombreTexturas[4]);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, ANCHO_TEXTURA_METAL, ALTO_TEXTURA_METAL, 
+	       0, GL_RGB, GL_UNSIGNED_BYTE, textura_metal);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -642,6 +1096,20 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
 		case 'a':
             moure_camera(4);
 				break;
+        case 'p':
+                if(angle1_llum < 90){
+                    angle1_llum += 0.5;
+                    angle2_llum += 0.5;
+                    altura_llums += 0.5/180;
+                }
+				break;
+        case 'o':
+                if(angle1_llum > 0){
+                    angle1_llum -= 0.5;
+                    angle2_llum -= 0.5;
+                    altura_llums -= 0.5/180;
+                }
+				break;
 	}
 	glutPostRedisplay();
 }
@@ -654,10 +1122,8 @@ void opcionesVisualizacion(void)
     printf(" flecha inferior - enfocar la càmera cap a baix\n");
     printf("flecha esquerre - enfocar la càmera cap a l'esquerre\n");
     printf("flecha dreta - enfocar la càmera cap a la dreta\n");
-
-}
-
-void llum(void){
+    printf("p - puja bombilles\n");
+    printf("o - baixa bombilles\n");
 
 }
 
@@ -681,12 +1147,9 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(ProcessNormalKeys);
 
 
-	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	//glOrtho(-1.0, 1.0f, -1.0, 1.0f, -1.0, 1.0f); // minims i màxims x,y i z que veim
-
     opcionesVisualizacion();
     material();
-    llum();
+    init();
 
 	// Comienza la ejecuci�n del core de GLUT
 	glutMainLoop();

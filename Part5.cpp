@@ -22,7 +22,7 @@ float posicio_apunta_z =0;
 
 float posicio_camera_x = 0;
 float posicio_camera_y =0;
-float posicio_camera_z =3;
+float posicio_camera_z =5;
 float angleincrement = 0.0f;
 int sentit = 1;
 
@@ -45,7 +45,7 @@ void init(void){
     GLfloat white_light[] = {1.0f,1.0f,1.0f};
     GLfloat angle[] = {180.0};
     GLfloat lmodel_ambient[] = {0.1,0.1,0.1,1.0};
-    glShadeModel(GL_SMOOTH);
+    glShadeModel(GL_FLAT);
 
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glLightfv(GL_LIGHT0, GL_DIFFUSE,white_light );
@@ -253,12 +253,10 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
 				sentit *= -1;
 				break;
 		case 'e':
-				{std::thread t1(volta_eixy);
-				t1.join();}
+				volta_eixy();
 				break;
 		case 'f':
-				{std::thread t2(volta_eixx);
-				t2.join();}
+				volta_eixx();
 				break;
 	}
 	glutPostRedisplay();
