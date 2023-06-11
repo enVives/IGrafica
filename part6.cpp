@@ -56,6 +56,10 @@ float altura_llums= 0.5f;
 
 bool ences_esquerre = true;
 bool ences_dreta = true;
+bool ences_quadre = false;
+bool fusio = true;
+bool acaba = false;
+bool dedins = true;
 
 
 GLubyte textura_pared[ALTO_TEXTURA_PARED][ANCHO_TEXTURA_PARED][3]; /* vector de texturas */
@@ -684,6 +688,34 @@ void pintarLlum(){
     glPopMatrix();
 }
 
+void pintarLLumQuadre(){
+    glPushMatrix();
+        glBegin(GL_POLYGON);
+            if(ences_quadre){
+                glColor3f(1,1,1);
+            }else{
+                glColor3f(0,0,0);
+            }
+            glVertex3f(-0.25,0.01,-4.75);
+            glVertex3f(-0.25,0.01,-5);
+            glVertex3f(0.25,0.01,-5);
+            glVertex3f(0.25,0.01,-4.75);
+        glEnd();
+    glPopMatrix();
+}
+void menuapp(int value) {
+
+  switch(value) {
+  case 1: fusio = true;
+	break;
+  case 2:  fusio = false;  break;
+  case 3:  acaba = true; break;
+  case 4:  break;
+  default:                             break;
+  }
+
+}
+
 void init(void){
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_SMOOTH);
@@ -692,6 +724,7 @@ void init(void){
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_STENCIL_TEST);
     //fins aquí va bé
 
     glEnable(GL_LIGHTING);{
@@ -700,8 +733,11 @@ void init(void){
         GLfloat light_specular[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
         GLfloat light_position_esquerre[]  = { -0.1f, altura_llums, -2.5f, 1.0f };
         GLfloat light_position_dreta[]  = { 0.1f, altura_llums, -2.5f, 1.0f };
+        GLfloat light_position_quadre[]  = { 0.0f, 0.01, -4.75f, 1.0f };
         GLfloat light_direction[] = { 0.0f,-1.0f,0};
+        GLfloat light_direction_quadre[] = { 0.0f,1.0f,-0.5};
         GLfloat light_cutoff = 60.0f;
+        GLfloat light_cutoff_quadre =90.0f;
         
         glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
         glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
@@ -724,6 +760,16 @@ void init(void){
         glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION,1.0);
         glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION,0.5);
         glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,0.2);
+
+        glLightfv(GL_LIGHT2, GL_AMBIENT,  light_ambient);
+        glLightfv(GL_LIGHT2, GL_DIFFUSE,  light_diffuse);
+        glLightfv(GL_LIGHT2, GL_SPECULAR, light_specular);
+        glLightfv(GL_LIGHT2, GL_POSITION, light_position_quadre);
+        glLightfv(GL_LIGHT2, GL_SPOT_DIRECTION, light_direction_quadre);
+        glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, light_cutoff_quadre);
+        glLightf(GL_LIGHT2,GL_CONSTANT_ATTENUATION,1.0);
+        glLightf(GL_LIGHT2,GL_LINEAR_ATTENUATION,0.5);
+        glLightf(GL_LIGHT2,GL_QUADRATIC_ATTENUATION,0.2);
 
         //GLfloat mat_ambient[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
         //GLfloat mat_diffuse[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -753,7 +799,26 @@ void init(void){
         }else{
             glDisable(GL_LIGHT1);
         }
-        
+
+        if(ences_quadre){
+            glEnable(GL_LIGHT2);
+        }else{
+            glDisable(GL_LIGHT2);
+        }
+
+        glEnable(GL_FOG);
+        {
+        GLfloat fogColor[4] = {0.5, 0.5, 0.5, 1.0};
+        glFogi(GL_FOG_MODE, GL_EXP);
+        glFogfv(GL_FOG_COLOR, fogColor);
+        glFogf(GL_FOG_DENSITY, 0.04);
+        glHint(GL_FOG_HINT, GL_DONT_CARE);
+        }
+
+        /*
+        int submenu = glutCreateMenu(menuapp);
+        glutAddMenuEntry("Incrementar", 3);
+        glutAddMenuEntry("Decrementar", 4);*/
     }
 }
 
@@ -776,6 +841,7 @@ void Display(void){
     pintarQuadre();
     glDisable(GL_LIGHTING);
     pintarLlum();
+    pintarLLumQuadre();
     glEnable(GL_LIGHTING);
     
     //pintarAlfombra();
@@ -1033,6 +1099,22 @@ void ProcessSpecialKeys(int key, int x, int y)
 	}
 }
 
+void estic_dedins(float provisional_x,float provisional_z){
+    //Parets
+    dedins = true;
+
+    if((provisional_x<-0.8)||(provisional_x>0.8)||(provisional_z > -0.20)||(provisional_z < -4.8)){
+        dedins = false;
+    }else{
+        if((provisional_x>-0.23)&&(posicio_camera_x<0.23)){
+            if((provisional_z < -2.0)&&(provisional_z>-3)){
+                dedins = false;
+            }
+        }
+    }
+
+    printf("dedins %d\n",dedins);
+}
 
 void moure_camera(int cas){
     float angle;
@@ -1083,45 +1165,76 @@ void moure_camera(int cas){
         posicio_z = 0.0f;
     }
 
+    float provisional_x = 0.0;
+    float provisional_z = 0.0;
+    
     switch(cas){
         case 1:
-        posicio_camera_x += 0.05*posicio_x;
-        posicio_camera_z += 0.05*posicio_z;
+        provisional_x = posicio_camera_x+0.05*posicio_x;
+        provisional_z = posicio_camera_z+0.05*posicio_z;
+
+        estic_dedins(provisional_x,provisional_z);
+
+        if(dedins){
+            posicio_camera_x += 0.05*posicio_x;
+            posicio_camera_z += 0.05*posicio_z;
+        }
         break;
         case 2:
-        posicio_camera_x -= 0.05*posicio_x;
-        posicio_camera_z -= 0.1*posicio_z;
+        provisional_x = posicio_camera_x-0.05*posicio_x;
+        provisional_z = posicio_camera_z-0.05*posicio_z;
+        
+
+        estic_dedins(provisional_x,provisional_z);
+
+        if(dedins){
+            posicio_camera_x -= 0.05*posicio_x;
+            posicio_camera_z -= 0.05*posicio_z;
+        }
+
         break;
         case 3:
-        posicio_camera_x -= 0.05*posicio_x;
-        posicio_camera_z -= 0.1*posicio_z;
+        provisional_x = posicio_camera_x-0.05*posicio_x;
+        provisional_z = posicio_camera_z-0.05*posicio_z;
+
+        estic_dedins(provisional_x,provisional_z);
+
+        if(dedins){
+            posicio_camera_x -= 0.05*posicio_x;
+            posicio_camera_z -= 0.05*posicio_z;
+        }
         break;
         case 4:
-        posicio_camera_x += 0.05*posicio_x;
-        posicio_camera_z += 0.05*posicio_z;
+        provisional_x = posicio_camera_x+0.05*posicio_x;
+        provisional_z = posicio_camera_z+0.05*posicio_z;
+
+        estic_dedins(provisional_x,provisional_z);
+
+        if(dedins){
+            posicio_camera_x += 0.05*posicio_x;
+            posicio_camera_z += 0.05*posicio_z;
+        }
         break;
     }
+        tornar_lloc();
 
-    tornar_lloc();
 
 }
 
-
 void ProcessNormalKeys(unsigned char tecla, int x, int y){
     
-
 	switch(tecla){
 		case 'w':
-            moure_camera(1);
+                moure_camera(1);
 			break;
 		case 's':
-            moure_camera(2);
+              moure_camera(2);  
 				break;
 		case 'd':
-            moure_camera(3);
+                moure_camera(3);
 				break;
 		case 'a':
-            moure_camera(4);
+                moure_camera(4);
 				break;
         case 'p':
                 if(angle1_llum < 90){
@@ -1143,6 +1256,9 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
         case 'l':
                 ences_dreta = !ences_dreta;
                 break;
+        case 'j':
+                ences_quadre = !ences_quadre;
+                break;
 	}
 	glutPostRedisplay();
 }
@@ -1150,6 +1266,11 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
 
 void opcionesVisualizacion(void)
 {
+    glutCreateMenu(menuapp);
+        glutAddMenuEntry("Fusio", 1);
+        glutAddMenuEntry("Fissio", 2);
+        glutAddMenuEntry("Salir", 3);
+        glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     printf(" flecha superior - enfocar la càmera cap a dalt\n");
     printf(" flecha inferior - enfocar la càmera cap a baix\n");
@@ -1159,6 +1280,8 @@ void opcionesVisualizacion(void)
     printf("o - baixa bombilles\n");
     printf("k - apaga/encen llum esquerre\n");
     printf("l - apaga/encen llum dreta\n");
+    printf("j- apaga/encen llum quadre\n");
+    printf("m - comença experiment\n");
 
 }
 
