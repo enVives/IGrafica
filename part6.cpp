@@ -94,6 +94,19 @@ static GLuint sostreindexs[20][4] = {{0,1,2,3},{3,2,7,6},{6,7,10,9},{9,10,13,12}
     {16,17,20,19},{19,20,23,22},{22,23,26,25},{25,26,29,28},{28,29,32,31}
 };
 
+static GLfloat enterredata[33][3] = {{-1,0,0},{0,0,0},{0,0,-0.5},{-1,0,-0.5},
+    {1,0,0},{1,0,-0.5},{-1,0,-1},{0,0,-1},{1,0,-1},{-1,0,-1.5},{0,0,-1.5},{1,0,-1.5},
+    {-1,0,-2},{0,0,-2},{1,0,-2},{-1,0,-2.5},{0,0,-2.5},{1,0,-2.5},{-1,0,-3},{0,0,-3},
+    {1,0,-3},{-1,0,-3.5},{0,0,-3.5},{1,0,-3.5},{-1,0,-4},{0,0,-4},{1,0,-4},{-1,0,-4.5},
+    {0,0,-4.5},{1,0,-4.5},{-1,0,-5},{0,0,-5},{1,0,-5}
+
+};
+
+static GLuint enterreindexs[20][4] = {{0,1,2,3},{3,2,7,6},{6,7,10,9},{9,10,13,12},{12,13,16,15},{15,16,19,18},
+    {18,19,22,21},{21,22,25,24},{24,25,28,27},{27,28,31,30},{1,4,5,2},{2,5,8,7},{7,8,11,10},{10,11,14,13},{13,14,17,16},
+    {16,17,20,19},{19,20,23,22},{22,23,26,25},{25,26,29,28},{28,29,32,31}
+};
+
 GLUquadricObj *objCylinder = gluNewQuadric();
 
 void drawCylinder(float radius, float height, int numSegments) {
@@ -182,24 +195,26 @@ void crearParedes(){
         glBindTexture(GL_TEXTURE_2D, nombreTexturas[1]);
 
         glPushMatrix();
-        
+        for(int i=0;i<20;i++){
         glBegin(GL_POLYGON);
+                    glTexCoord2f(0.0,0.0);
+                    glNormal3f(0,1,0);
+                    glVertex3fv(&enterredata[enterreindexs[i][0]][0]);
 
-        glNormal3f(0,1,0);
-        glTexCoord2f(0.0,0.0);
-        glVertex3f(-1.0, 0.0, 0.0);
-        glNormal3f(0,1,0);
-        glTexCoord2f(0.0,1.0);
-        glVertex3f(-1.0, 0.0,-5.0);
-        glNormal3f(0,1,0);
-        glTexCoord2f(1.0,1.0);
-        glVertex3f(1.0, 0.0, -5.0);
-        glNormal3f(0,1,0);
-        glTexCoord2f(1.0,0.0);
-        glVertex3f(1.0, 0.0,0.0);
+                    glTexCoord2f(0.0,1.0);
+                    glNormal3f(0,1,0);
+                    glVertex3fv(&enterredata[enterreindexs[i][1]][0]);
+
+                    glTexCoord2f(1.0,1.0);
+                    glNormal3f(0,1,0);
+                    glVertex3fv(&enterredata[enterreindexs[i][2]][0]);
+
+                    glTexCoord2f(1.0,0.0);
+                    glNormal3f(0,1,0);
+                    glVertex3fv(&enterredata[enterreindexs[i][3]][0]);
         glEnd();
-
-        glPopMatrix();
+        }
+    glPopMatrix();
         //corregir
 
         /*
@@ -218,10 +233,12 @@ void crearParedes(){
             glDisable(GL_TEXTURE_GEN_S);
             glDisable(GL_TEXTURE_GEN_T);
         glPopMatrix();*/
+    glDisable(GL_TEXTURE_2D);
 
 }
 
 void pintarSostre(){
+    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, nombreTexturas[2]);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -356,7 +373,7 @@ void pintarAlfombra(){
 void pintarQuadre(){
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, nombreTexturas[1]);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
     glPushMatrix();
         glTranslatef(0,0,-5);
@@ -683,8 +700,8 @@ void init(void){
         GLfloat light_specular[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
         GLfloat light_position_esquerre[]  = { -0.1f, altura_llums, -2.5f, 1.0f };
         GLfloat light_position_dreta[]  = { 0.1f, altura_llums, -2.5f, 1.0f };
-        GLfloat light_direction[] = { 0.0f,-0.25f,0};
-        GLfloat light_cutoff = 100.0f;
+        GLfloat light_direction[] = { 0.0f,-1.0f,0};
+        GLfloat light_cutoff = 60.0f;
         
         glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
         glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
@@ -695,7 +712,6 @@ void init(void){
         glLightf(GL_LIGHT0,GL_CONSTANT_ATTENUATION,1.0);
         glLightf(GL_LIGHT0,GL_LINEAR_ATTENUATION,0.5);
         glLightf(GL_LIGHT0,GL_QUADRATIC_ATTENUATION,0.2);
-        printf("Altura llums : %f\n",altura_llums);
 
 
 
@@ -725,8 +741,19 @@ void init(void){
         glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
         glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission);
 
-        glEnable(GL_LIGHT0);
-        glEnable(GL_LIGHT1);
+
+        if(ences_esquerre){
+            glEnable(GL_LIGHT0);
+        }else{
+            glDisable(GL_LIGHT0);
+        }
+
+        if(ences_dreta){
+            glEnable(GL_LIGHT1);
+        }else{
+            glDisable(GL_LIGHT1);
+        }
+        
     }
 }
 
@@ -1110,6 +1137,12 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
                     altura_llums -= 0.5/180;
                 }
 				break;
+        case 'k':
+                ences_esquerre = !ences_esquerre;
+                break;
+        case 'l':
+                ences_dreta = !ences_dreta;
+                break;
 	}
 	glutPostRedisplay();
 }
@@ -1124,6 +1157,8 @@ void opcionesVisualizacion(void)
     printf("flecha dreta - enfocar la càmera cap a la dreta\n");
     printf("p - puja bombilles\n");
     printf("o - baixa bombilles\n");
+    printf("k - apaga/encen llum esquerre\n");
+    printf("l - apaga/encen llum dreta\n");
 
 }
 
