@@ -15,7 +15,7 @@
 int modo = solido;
 GLfloat angleinici = 20.0f; //ángulo de inicio de las primitivas
 GLfloat angleincrement = 0.0f; //incremento del angulo de las primitivas
-bool ortho = true; //Elegimos que perspectiva queremos utilizar
+bool ortho = false; //Elegimos que perspectiva queremos utilizar
 
 /* Funci�n que establece la proyecci�n -------------------------------------*/
 void proyeccion(void)

@@ -1,6 +1,6 @@
 //Part 5
 //Autors: Pere Joan Vives Morey i Arnau Vidal Moreno
-//Codi per Executar : g++ part5.cpp -o part5 -lGL -lGLU
+//Codi per Executar : g++ part5.cpp -o part5 -lGL -lGLU -lglut
 #include <GL/glut.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -118,30 +118,16 @@ void init(void){
 
 void display(void){
     
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //Solució, colocar la llum cada vegada que cridam a display!!!!!!!!
     init();
-    //aliasing
-    //glEnable (GL_LINE_SMOOTH);
-    //glEnable( GL_BLEND);
-    //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glHint ( GL_LINE_SMOOTH_HINT, GL_NICEST);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
     gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, 0.0, 1.0, 0.0);
-  
     
     int i;
 
-    //glPolygonMode(GL_FRONT, GL_LINE); //linies no poligons
-    //glPolygonMode(GL_BACK, GL_LINE);
-
-
-    //glLineStipple(1,0x00FF); //linies stripped
-    //glEnable(GL_LINE_STIPPLE);
     glDisable(GL_LIGHTING);
     glPushMatrix();
     glTranslatef(-posicio_bombilla_x,-posicio_bombilla_y,-posicio_bombilla_z);
@@ -159,7 +145,6 @@ void display(void){
     glPushMatrix();
     glRotatef(fAngulo,0.0f,1.0f,0.0f);
     glRotatef(45.0f,0.0f,0.0f,1.0f);
-
     
     glBegin(GL_TRIANGLES);
         for(i =0; i<20;i++){
@@ -190,13 +175,9 @@ void display(void){
     glEnd();
     glPopMatrix();
     glEnable(GL_LIGHTING);
-    
-    //glPolygonMode(GL_FRONT, GL_FILL); //linies no poligons
-    //glPolygonMode(GL_BACK, GL_FILL);
 
     glutSwapBuffers();
 	glFlush();
-
 }
 
 void Reproyectar(int ancho, int alto){
@@ -353,9 +334,6 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
         case 'q':
                 segona = !segona;
                 break;
-
-        
-        
 
 	}
 	glutPostRedisplay();

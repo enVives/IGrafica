@@ -1,7 +1,7 @@
 // Doble Pèndul
 // Simulació del doble Pèndul utilitzant les equacions de Lagrange
 // Pere Joan Vives Morey i Arnau Vidal Moreno
-//Código para ejecutar : g++ pendulo.cpp -o pendulo -lGL -lGLU -lglut
+//Código para ejecutar : g++ part2.cpp -o part2 -lGL -lGLU -lglut
 
 #include <GL/glut.h>
 #include <GL/gl.h>
@@ -160,8 +160,6 @@ void lagrange(void){
 //Función que modifica el volumen de visualización para que tenga las mismas 
 //proporciones que la ventana y de esta manera se evita la distorsión.
 void Reproyectar(int width, int height){
-	std::cout << "amplària "<<width << "\n";
-	std::cout <<"altura "<<height << "\n";
 
 	glViewport(0,0,width,height);
 	glMatrixMode(GL_PROJECTION);

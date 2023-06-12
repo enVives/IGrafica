@@ -1,3 +1,6 @@
+//Part 5
+//Autors: Pere Joan Vives Morey i Arnau Vidal Moreno
+//Codi per Executar : g++ part6.cpp -o part6 -lGL -lGLU -lglut
 #include <GL/glut.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -46,7 +49,6 @@ float posicio_camera_z =-0.5f;
 float anglexz = 0.0;
 float anglexy = 0.0;
 int direccio =1;
-int sentit = 1;
 
 //Per els llums
 
@@ -59,7 +61,6 @@ bool ences_esquerre = true;
 bool ences_dreta = true;
 bool ences_quadre = false;
 bool fusio = true;
-bool acaba = false;
 bool dedins = true;
 
 
@@ -641,15 +642,12 @@ void pintarLLumQuadre(){
 void menuapp(int value) {
 
   switch(value) {
-  case 1: fusio = true;
-	break;
-  case 2:  fusio = false;  
+  case 1:  fusio = false;  
   static GLfloat posicionsbolles1 [7][3] = {{-0.18,0.33,-2.5},{0.0,0.33,-2.51},{0,0.33,-2.49},
     {0.01,0.33,-2.51},{0.01,0.33,-2.49},{0.005,0.33,-2.53},{0.005,0.33,-2.47},};
     memcpy(posicionsbolles, posicionsbolles1, sizeof(posicionsbolles));
   break;
-  case 3:  exit(2); break;
-  case 4:  break;
+  case 2:  exit(2); break;
   default:                             break;
   }
   glutPostRedisplay();
@@ -664,7 +662,6 @@ void init(void){
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_STENCIL_TEST);
 
     glEnable (GL_LINE_SMOOTH);
 	glHint ( GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -885,10 +882,10 @@ void eventoVentana(GLsizei ancho, GLsizei alto)
 
     glViewport(0, 0, ancho, alto);
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity(); // compara aquí amb ortho i frustrum
+    glLoadIdentity(); 
 	gluPerspective(45.0f,(GLdouble) ancho/alto , 0.0, 10.0);
 
-    //actualitzar la posició de les llums aquí
+
 }
 
 void leeTextura (char *fichero, int torn) {
@@ -1265,6 +1262,7 @@ void experiment(void){
         glutPostRedisplay();
 
 }
+
 void ProcessNormalKeys(unsigned char tecla, int x, int y){
     
 	switch(tecla){
@@ -1321,15 +1319,18 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
 void opcionesVisualizacion(void)
 {
     glutCreateMenu(menuapp);
-        glutAddMenuEntry("Fusio", 1);
-        glutAddMenuEntry("Fissio", 2);
-        glutAddMenuEntry("Salir", 3);
+        glutAddMenuEntry("Fissio", 1);
+        glutAddMenuEntry("Salir", 2);
         glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     printf(" flecha superior - enfocar la càmera cap a dalt\n");
     printf(" flecha inferior - enfocar la càmera cap a baix\n");
     printf("flecha esquerre - enfocar la càmera cap a l'esquerre\n");
     printf("flecha dreta - enfocar la càmera cap a la dreta\n");
+    printf("w - moure cap envant\n");
+    printf("a - moure cap a l'esquerre\n");
+    printf("s - moure cap enrere \n");
+    printf("d - moure cap a la dreta\n");
     printf("p - puja bombilles\n");
     printf("o - baixa bombilles\n");
     printf("k - apaga/encen llum esquerre\n");
@@ -1337,6 +1338,7 @@ void opcionesVisualizacion(void)
     printf("j- apaga/encen llum quadre\n");
     printf("m - comença experiment\n");
     printf("n - acaba experiment\n");
+    printf("CLICK DRET - obri menú\n");
 
 }
 

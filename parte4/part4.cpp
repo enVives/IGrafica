@@ -1,6 +1,7 @@
 // Doble Pèndul
 // Simulació del doble Pèndul utilitzant les equacions de Lagrange
 // Pere Joan Vives Morey i Arnau Vidal Moreno
+//Compilar: g++ part4.cpp -o part4 -lGL -lGLU -lglut -pthread
 
 #include <GL/glut.h>
 #include <GL/gl.h>
@@ -128,11 +129,7 @@ void tornar_lloc(){
 }
 
 void girar_inici_xz(){
-    if(anglexz <0){
         gira_vista_y(-anglexz);
-    }else{
-        gira_vista_y(-anglexz);
-    }
 }
 
 

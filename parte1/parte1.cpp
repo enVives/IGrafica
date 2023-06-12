@@ -1,5 +1,6 @@
 // Etapa1.cpp
-// Fichero principal 
+// Autors: Pere Joan Vives Morey i Arnau Vidal Moreno
+//Compilar: g++ part1.cpp -o part1 -lGL -lGLU -lglut
 ////////////////////////////////////////////////////
 #include <GL/glut.h>
 #include <GL/gl.h>
