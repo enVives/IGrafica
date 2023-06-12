@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <thread>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -69,6 +70,9 @@ GLubyte textura_marie[ALTO_TEXTURA_MARIE][ANCHO_TEXTURA_MARIE][3]; /* vector de 
 GLubyte textura_metal[ALTO_TEXTURA_METAL][ANCHO_TEXTURA_METAL][3]; /* vector de texturas */
 GLuint nombreTexturas[MAX_TEXTURAS];
 
+
+static GLfloat posicionsbolles [7][3] = {{-0.18,0.33,-2.5},{0.0,0.33,-2.51},{0,0.33,-2.49},
+    {0.01,0.33,-2.51},{0.01,0.33,-2.49},{0.005,0.33,-2.53},{0.005,0.33,-2.47},};
 static GLfloat paretsdata [24][3] = {{-1,0,0},{-1,1,0},{1,1,0},{1,0,0},
     {1,0,-1},{1,1,-1},{1,1,-2},{1,0,-2},{1,0,-3},{1,1,-3},{1,1,-4},{1,0,-4},
     {1,0,-5},{1,1,-5},{-1,1,-5},{-1,0,-5},{-1,0,-4},{-1,1,-4},{-1,1,-3},{-1,0,-3},
@@ -302,76 +306,6 @@ void pintarColumna(){
             glVertex3f(-0.2,0.3,-2.7);
         glEnd();
     glPopMatrix();
-}
-
-
-void pintarAlfombra(){
-
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, nombreTexturas[4]);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-
-    glPushMatrix();
-        glBegin(GL_POLYGON);
-            glTexCoord2f(0.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(-0.25,0,0);
-            glTexCoord2f(0.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(-0.25,0,-2.5);
-            glTexCoord2f(1.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0.25,0,-2.5);
-            glTexCoord2f(1.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0.25,0,0);
-        glEnd();
-        glBegin(GL_POLYGON);
-            glTexCoord2f(0.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(-0.25,0,-2.5);
-            glTexCoord2f(0.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(-0.25,0,-5);
-            glTexCoord2f(1.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0.25,0,-5);
-            glTexCoord2f(1.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0.25,0,-2.5);
-        glEnd();
-    glPopMatrix();
-    glPushMatrix();
-        glBegin(GL_POLYGON);
-            glTexCoord2f(0.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(-1,0,-2.25);
-            glTexCoord2f(0.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(-1,0,-2.75);
-            glTexCoord2f(1.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0,0,-2.75);
-            glTexCoord2f(1.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0,0,-2.25);
-        glEnd();
-        glBegin(GL_POLYGON);
-            glTexCoord2f(0.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0,0,-2.25);
-            glTexCoord2f(0.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(1,0,-2.25);
-            glTexCoord2f(1.0,1.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(1,0,-2.75);
-            glTexCoord2f(1.0,0.0);
-            glColor3f(0.6,0.3,0.3);
-            glVertex3f(0,0,-2.75);
-        glEnd();
-    glPopMatrix();
-    glDisable(GL_TEXTURE_2D);
 }
 
 void pintarQuadre(){
@@ -703,16 +637,22 @@ void pintarLLumQuadre(){
         glEnd();
     glPopMatrix();
 }
+
 void menuapp(int value) {
 
   switch(value) {
   case 1: fusio = true;
 	break;
-  case 2:  fusio = false;  break;
-  case 3:  acaba = true; break;
+  case 2:  fusio = false;  
+  static GLfloat posicionsbolles1 [7][3] = {{-0.18,0.33,-2.5},{0.0,0.33,-2.51},{0,0.33,-2.49},
+    {0.01,0.33,-2.51},{0.01,0.33,-2.49},{0.005,0.33,-2.53},{0.005,0.33,-2.47},};
+    memcpy(posicionsbolles, posicionsbolles1, sizeof(posicionsbolles));
+  break;
+  case 3:  exit(2); break;
   case 4:  break;
   default:                             break;
   }
+  glutPostRedisplay();
 
 }
 
@@ -725,6 +665,9 @@ void init(void){
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_STENCIL_TEST);
+
+    glEnable (GL_LINE_SMOOTH);
+	glHint ( GL_LINE_SMOOTH_HINT, GL_NICEST);
     //fins aquí va bé
 
     glEnable(GL_LIGHTING);{
@@ -774,7 +717,7 @@ void init(void){
         //GLfloat mat_ambient[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
         //GLfloat mat_diffuse[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
         //GLfloat mat_specular[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
-        GLfloat mat_shininess[] = { 100.0 };
+        GLfloat mat_shininess[] = { 50.0 };
 
         GLfloat mat_specular[] = {1.0, 0.901, 0.792, 1.0};
         GLfloat mat_diffuse[] = {1.0, 0.901, 0.792, 1.0};
@@ -822,6 +765,83 @@ void init(void){
     }
 }
 
+void fisio(void){
+
+    glPushMatrix();
+        GLfloat mat_emission5[] = {0.0,1.0,0.0,0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission5);
+        glMaterialf(GL_FRONT, GL_SHININESS, 60.0f);
+        glTranslatef(posicionsbolles[5][0],posicionsbolles[5][1],posicionsbolles[5][2]);
+        glBegin(GL_POLYGON);
+            glColor3f(0,1,0);
+            glutSolidSphere(0.005,30,30);
+        glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+        GLfloat mat_emission[] = {1.0,0.0,0.0,0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission);
+        glMaterialf(GL_FRONT, GL_SHININESS, 60.0f);
+        glTranslatef(posicionsbolles[0][0],posicionsbolles[0][1],posicionsbolles[0][2]);
+        glBegin(GL_POLYGON);
+            glColor3f(1,0,0);
+            glutSolidSphere(0.005,30,30);
+        glEnd();
+    glPopMatrix();
+    
+    glPushMatrix();
+        GLfloat mat_emission1[] = {1.0,0.0,1.0,0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission1);
+        glMaterialf(GL_FRONT, GL_SHININESS, 60.0f);
+        glTranslatef(posicionsbolles[1][0],posicionsbolles[1][1],posicionsbolles[1][2]);
+        glBegin(GL_POLYGON);
+            glColor3f(1,0,1);
+            glutSolidSphere(0.005,30,30);
+        glEnd();
+    glPopMatrix();
+    glPushMatrix();
+        GLfloat mat_emission2[] = {1.0,0.0,1.0,0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission2);
+        glMaterialf(GL_FRONT, GL_SHININESS, 60.0f);
+        glTranslatef(posicionsbolles[2][0],posicionsbolles[2][1],posicionsbolles[2][2]);
+        glBegin(GL_POLYGON);
+            glColor3f(1,0,1);
+            glutSolidSphere(0.005,30,30);
+        glEnd();
+    glPopMatrix();
+    glPushMatrix();
+        GLfloat mat_emission3[] = {0.0,0.0,0.0,0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission3);
+        glMaterialf(GL_FRONT, GL_SHININESS, 60.0f);
+        glTranslatef(posicionsbolles[3][0],posicionsbolles[3][1],posicionsbolles[3][2]);
+        glBegin(GL_POLYGON);
+            glColor3f(0,0,0);
+            glutSolidSphere(0.005,30,30);
+        glEnd();
+    glPopMatrix();
+    glPushMatrix();
+        GLfloat mat_emission4[] = {0.0,0.0,0.0,0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission4);
+        glMaterialf(GL_FRONT, GL_SHININESS, 60.0f);
+        glTranslatef(posicionsbolles[4][0],posicionsbolles[4][1],posicionsbolles[4][2]);
+        glBegin(GL_POLYGON);
+            glColor3f(0,0,0);
+            glutSolidSphere(0.005,30,30);
+        glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+        GLfloat mat_emission6[] = {0.0,1.0,0.0,0.0};
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission6);
+        glMaterialf(GL_FRONT, GL_SHININESS, 60.0f);
+        glTranslatef(posicionsbolles[6][0],posicionsbolles[6][1],posicionsbolles[6][2]);
+        glBegin(GL_POLYGON);
+            glColor3f(0,1,0);
+            glutSolidSphere(0.005,30,30);
+        glEnd();
+    glPopMatrix();
+}
+
 void Display(void){
 
     glClearColor(0.0,0.0,0.0,0.0);
@@ -831,8 +851,6 @@ void Display(void){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(posicio_camera_x, posicio_camera_y, posicio_camera_z, posicio_apunta_x, posicio_apunta_y, posicio_apunta_z, 0.0, 1.0, 0.0);
-
-
 
     glEnable(GL_TEXTURE_2D);
 
@@ -844,14 +862,19 @@ void Display(void){
     pintarLLumQuadre();
     glEnable(GL_LIGHTING);
     
-    //pintarAlfombra();
     pintarColumna();
 
+    if(!fusio){
+        fisio();
+    }
+    
+    glDisable(GL_LIGHTING);
     glPushMatrix();
     glTranslatef(posicio_apunta_x,posicio_apunta_y,posicio_apunta_z);
-    glColor3f(1.0,1.0,1.0);
-    glutSolidSphere(0.005,30.0,30.0);
+    glColor3f(0.0,0.0,0.0);
+    glutSolidSphere(0.001,30.0,30.0);
     glPopMatrix();
+    glEnable(GL_LIGHTING);
 
     glutSwapBuffers();
 	glFlush();
@@ -921,8 +944,7 @@ void leeTextura (char *fichero, int torn) {
                  textura_metal[j][i][0] = (GLubyte)r;
                  textura_metal[j][i][1] = (GLubyte)g;
                  textura_metal[j][i][2] = (GLubyte)b;
-                }
-                
+                } 
             }
         }
         fclose(tga);   /* Cierre del fichero TGA */
@@ -994,6 +1016,7 @@ void material (void) {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
   glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
@@ -1001,7 +1024,6 @@ void material (void) {
   glTexGenfv(GL_T, GL_OBJECT_PLANE, tparams);
 
 }
-
 
 void gira_vista_y(float angle){
     float vista_x = posicio_apunta_x;
@@ -1066,7 +1088,6 @@ void girar_inici_xz(){
     }
 }
 
-
 void ProcessSpecialKeys(int key, int x, int y)
 {
     if (key == GLUT_KEY_LEFT)
@@ -1112,8 +1133,6 @@ void estic_dedins(float provisional_x,float provisional_z){
             }
         }
     }
-
-    printf("dedins %d\n",dedins);
 }
 
 void moure_camera(int cas){
@@ -1221,6 +1240,31 @@ void moure_camera(int cas){
 
 }
 
+void experiment(void){
+        if(posicionsbolles[0][0] < posicionsbolles[1][0]){
+            posicionsbolles[0][0] += 0.0001;
+        }else{
+            if(posicionsbolles[5][2] > -2.69){
+                posicionsbolles[1][0] += 0.0001;
+                posicionsbolles[1][2] -= 0.0001;
+                posicionsbolles[2][0] += 0.0001;
+                posicionsbolles[2][2] -= 0.0001;
+                posicionsbolles[5][0] += 0.0001;
+                posicionsbolles[5][2] -= 0.0001;
+
+                posicionsbolles[3][0] += 0.0001;
+                posicionsbolles[3][2] += 0.0001;
+                posicionsbolles[4][0] += 0.0001;
+                posicionsbolles[4][2] += 0.0001;
+                posicionsbolles[6][0] += 0.0001;
+                posicionsbolles[6][2] += 0.0001;
+
+
+            }
+        }
+        glutPostRedisplay();
+
+}
 void ProcessNormalKeys(unsigned char tecla, int x, int y){
     
 	switch(tecla){
@@ -1259,6 +1303,16 @@ void ProcessNormalKeys(unsigned char tecla, int x, int y){
         case 'j':
                 ences_quadre = !ences_quadre;
                 break;
+        case 'm' :
+                if(!fusio){
+                 glutIdleFunc(experiment);
+                }
+                break;
+        case 'n' :
+                if(!fusio){
+                 glutIdleFunc(NULL);
+                }
+                break;
 	}
 	glutPostRedisplay();
 }
@@ -1282,6 +1336,7 @@ void opcionesVisualizacion(void)
     printf("l - apaga/encen llum dreta\n");
     printf("j- apaga/encen llum quadre\n");
     printf("m - comença experiment\n");
+    printf("n - acaba experiment\n");
 
 }
 
